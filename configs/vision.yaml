@@ -1,0 +1,29 @@
+image:
+  max_pixels: 16000000
+  convert_mode: RGB
+
+hed:
+  device: auto
+  tile_size: 512
+  overlap: 32
+  weights_path: backend/models/hed/hed_weights.pth
+
+texture:
+  entropy_window: 11
+  entropy_bins: 32
+  variance_window: 11
+
+fusion:
+  hed_weight: 0.45
+  entropy_weight: 0.35
+  variance_weight: 0.20
+  median_kernel: 3
+
+block_map:
+  block_size: 8
+  safety_margin: 0.10
+  score_method: mean
+
+visualization:
+  colormap: turbo
+  overlay_alpha: 0.30

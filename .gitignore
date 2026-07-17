@@ -1,0 +1,28 @@
+# Python virtual environment
+.venv/
+
+# Python-generated files
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# VS Code
+.vscode/
+
+# HED model weights
+backend/models/hed/*.pth
+backend/models/hed/*.pt
+backend/models/hed/*.caffemodel
+
+# Datasets
+datasets/
+
+# Generated outputs
+sample_data/vision_outputs/*
+experiments/results/raw/
+
+# Temporary files
+temp/
+uploads/

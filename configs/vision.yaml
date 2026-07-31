@@ -3,10 +3,16 @@ image:
   convert_mode: RGB
 
 hed:
-  device: auto
+  framework: opencv_dnn_caffe
+  device: cpu
   tile_size: 512
   overlap: 32
-  weights_path: backend/models/hed/hed_weights.pth
+  prototxt_path: backend/models/hed/deploy.prototxt
+  weights_path: backend/models/hed/hed_pretrained_bsds.caffemodel
+  mean_bgr:
+    - 104.00698793
+    - 116.66876762
+    - 122.67891434
 
 texture:
   entropy_window: 11

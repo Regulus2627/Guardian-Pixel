@@ -20,24 +20,42 @@ class ImageConfig:
     convert_mode: str
 
 
+# @dataclass(frozen=True)
+# class HEDConfig:
+#     device: str
+#     tile_size: int
+#     overlap: int
+#     weights_path: str
+
+#     @property
+#     def resolved_device(self) -> str:
+#         """Return the actual PyTorch device that should be used."""
+
+#         if self.device == "auto":
+#             return "cuda" if torch.cuda.is_available() else "cpu"
+
+#         if self.device == "cuda" and not torch.cuda.is_available():
+#             raise VisionConfigError(
+#                 "CUDA was requested, but CUDA is not available."
+#             )
+
+#         return self.device
 @dataclass(frozen=True)
 class HEDConfig:
+    framework: str
     device: str
     tile_size: int
     overlap: int
+    prototxt_path: str
     weights_path: str
+    mean_bgr: list[float]
 
     @property
     def resolved_device(self) -> str:
-        """Return the actual PyTorch device that should be used."""
+        """Return the requested HED inference device."""
 
         if self.device == "auto":
-            return "cuda" if torch.cuda.is_available() else "cpu"
-
-        if self.device == "cuda" and not torch.cuda.is_available():
-            raise VisionConfigError(
-                "CUDA was requested, but CUDA is not available."
-            )
+            return "cpu"
 
         return self.device
 
@@ -113,10 +131,14 @@ def validate_vision_config(config: VisionConfig) -> None:
             "image.convert_mode must be RGB for the current protocol."
         )
 
-    if config.hed.device not in {"auto", "cpu", "cuda"}:
+    # if config.hed.device not in {"auto", "cpu", "cuda"}:
+    #     raise VisionConfigError(
+    #         "hed.device must be one of: auto, cpu, cuda."
+    #     )
+    if config.hed.device not in {"auto", "cpu"}:
         raise VisionConfigError(
-            "hed.device must be one of: auto, cpu, cuda."
-        )
+            "hed.device must be auto or cpu."
+    )
 
     if config.hed.tile_size <= 0:
         raise VisionConfigError("hed.tile_size must be greater than zero.")
@@ -127,6 +149,39 @@ def validate_vision_config(config: VisionConfig) -> None:
     if config.hed.overlap >= config.hed.tile_size:
         raise VisionConfigError(
             "hed.overlap must be smaller than hed.tile_size."
+        )
+
+    if config.hed.framework != "opencv_dnn_caffe":
+        raise VisionConfigError(
+            "hed.framework must be opencv_dnn_caffe."
+        )
+
+    if config.hed.device not in {"auto", "cpu"}:
+        raise VisionConfigError(
+            "OpenCV HED currently supports auto or cpu."
+        )
+
+    if not config.hed.prototxt_path.strip():
+        raise VisionConfigError(
+            "hed.prototxt_path cannot be empty."
+        )
+
+    if not config.hed.weights_path.strip():
+        raise VisionConfigError(
+            "hed.weights_path cannot be empty."
+        )
+
+    if len(config.hed.mean_bgr) != 3:
+        raise VisionConfigError(
+            "hed.mean_bgr must contain three values."
+        )
+
+    if not all(
+        isinstance(value, (int, float))
+        for value in config.hed.mean_bgr
+    ):
+        raise VisionConfigError(
+            "hed.mean_bgr values must be numerical."
         )
 
     _validate_odd_window(

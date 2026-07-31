@@ -32,6 +32,19 @@ def test_load_valid_configuration():
     assert config.block_map.block_size == 8
     assert config.block_map.score_method == "mean"
 
+    assert config.hed.framework == "opencv_dnn_caffe"
+    assert config.hed.resolved_device == "cpu"
+
+    assert config.hed.prototxt_path.endswith(
+        "deploy.prototxt"
+    )
+
+    assert config.hed.weights_path.endswith(
+        "hed_pretrained_bsds.caffemodel"
+    )
+
+    assert len(config.hed.mean_bgr) == 3
+
 
 def test_missing_configuration_file():
     with pytest.raises(

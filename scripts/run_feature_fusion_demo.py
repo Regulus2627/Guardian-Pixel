@@ -28,6 +28,9 @@ from backend.vision.visualization import (
     save_color_heatmap,
     save_grayscale_map,
 )
+from backend.vision.hed.tiling import (
+    TiledHEDInference,
+)
 
 
 def main() -> None:
@@ -121,7 +124,15 @@ def main() -> None:
         mean_bgr=config.hed.mean_bgr,
     )
 
-    raw_hed = hed_inference.predict(rgb)
+    # raw_hed = hed_inference.predict(rgb)
+    tiled_hed = TiledHEDInference(
+        base_inference=hed_inference,
+        tile_size=config.hed.tile_size,
+        overlap=config.hed.overlap,
+    )
+
+    raw_hed = tiled_hed.predict(rgb)
+
 
     fusion_start = perf_counter()
 
@@ -224,8 +235,7 @@ def main() -> None:
         },
         "timings_seconds": {
             "hed": (
-                hed_inference
-                .last_inference_seconds
+            tiled_hed.last_inference_seconds
             ),
             "entropy": entropy_seconds,
             "variance": variance_seconds,
@@ -246,6 +256,9 @@ def main() -> None:
                 .fused_heatmap.mean()
             ),
         },
+            "hed_tile_count": (
+            tiled_hed.last_tile_count
+        ),
     }
 
     with (
@@ -265,7 +278,7 @@ def main() -> None:
     )
     print(
         f"HED time: "
-        f"{hed_inference.last_inference_seconds:.4f}s"
+        f"{tiled_hed.last_inference_seconds:.4f}s"
     )
     print(
         f"Entropy time: "
@@ -282,6 +295,10 @@ def main() -> None:
     print(
         f"Outputs: {output_directory}"
     )
+    print(
+    f"HED tile count: "
+    f"{tiled_hed.last_tile_count}"
+)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
-
+from decimal import Decimal, ROUND_CEILING
 from backend.vision.schemas import BlockMapResult
 
 
@@ -174,9 +174,18 @@ def generate_capacity_aware_block_map(
         )
     )
 
-    payload_target = math.ceil(
-        required_payload_bits
-        * (1.0 + safety_margin)
+    payload_target_decimal = (
+        Decimal(required_payload_bits)
+        * (
+            Decimal("1")
+            + Decimal(str(safety_margin))
+        )
+    )
+
+    payload_target = int(
+        payload_target_decimal.to_integral_value(
+            rounding=ROUND_CEILING
+        )
     )
 
     total_target = (

@@ -21,6 +21,8 @@ datasets/
 
 # Generated outputs
 sample_data/vision_outputs/*
+sample_data/outputs/
+sample_data/secrets/
 experiments/results/raw/
 
 # Temporary files

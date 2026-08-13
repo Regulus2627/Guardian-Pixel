@@ -11,6 +11,7 @@ from backend.vision.schemas import (
     FeatureMaps,
     ImageInfo,
     MapEncodingResult,
+    RawFeatureMaps,
     VisionAnalysisResult,
 )
 
@@ -95,6 +96,15 @@ def create_vision_result():
             raw_byte_count=1,
             encoded_byte_count=1,
         ),
+        raw_feature_maps=RawFeatureMaps(
+            hed_map=hed.copy(),
+            entropy_map=(
+                entropy.copy() * 5.0
+            ),
+            variance_map=(
+                variance.copy() * 1000.0
+            ),
+        ),
         timings={"total": 1.5},
         config_used={},
     )
@@ -112,21 +122,17 @@ def test_extract_cover_features():
     assert features.width == 16
     assert features.height == 16
     assert features.total_pixels == 256
+
     assert features.total_blocks == 4
     assert features.selected_blocks == 2
     assert features.selected_percentage == 50.0
 
     assert 0 <= features.edge_density <= 1
-    assert (
-        0
-        <= features.smooth_pixel_percentage
-        <= 100
-    )
-    assert (
-        0
-        <= features.high_score_pixel_percentage
-        <= 100
-    )
+    assert 0 <= features.texture_score <= 1
+
+    assert features.raw_hed_mean >= 0
+    assert features.raw_entropy_mean >= 0
+    assert features.raw_variance_mean >= 0
 
 
 def test_empty_image_id_is_rejected():
@@ -162,11 +168,9 @@ def test_csv_is_written(tmp_path):
         tmp_path / "cover_features.csv"
     )
 
-    result_path = (
-        write_cover_features_csv(
-            [features],
-            output_path,
-        )
+    result_path = write_cover_features_csv(
+        [features],
+        output_path,
     )
 
     assert result_path.exists()
@@ -178,3 +182,4 @@ def test_csv_is_written(tmp_path):
     assert "image_id" in content
     assert "cover" in content
     assert "hed_mean" in content
+    assert "texture_score" in content

@@ -29,6 +29,15 @@ class CoverFeatures:
     channels: int
     original_format: str
 
+    raw_hed_mean: float
+    raw_hed_std: float
+
+    raw_entropy_mean: float
+    raw_entropy_std: float
+
+    raw_variance_mean: float
+    raw_variance_std: float
+
     hed_mean: float
     hed_std: float
     hed_p25: float
@@ -65,6 +74,7 @@ class CoverFeatures:
     encoded_map_bytes: int
     map_compression_ratio: float
 
+    texture_score: float
     analysis_time_seconds: float
 
 
@@ -72,6 +82,8 @@ def _validate_map(
     feature_map: np.ndarray,
     name: str,
 ) -> None:
+    """Validate one two-dimensional feature map."""
+
     if not isinstance(
         feature_map,
         np.ndarray,
@@ -99,7 +111,7 @@ def _validate_map(
 def _map_statistics(
     feature_map: np.ndarray,
 ) -> dict[str, float]:
-    """Calculate common statistics for a normalized feature map."""
+    """Calculate common feature-map statistics."""
 
     return {
         "mean": float(
@@ -156,7 +168,7 @@ def extract_cover_features(
             "vision_result must be VisionAnalysisResult."
         )
 
-    for threshold, name in [
+    for threshold, threshold_name in [
         (edge_threshold, "edge_threshold"),
         (
             smooth_threshold,
@@ -169,42 +181,61 @@ def extract_cover_features(
     ]:
         if not 0 <= threshold <= 1:
             raise CoverFeatureError(
-                f"{name} must be between 0 and 1."
+                f"{threshold_name} must be "
+                "between 0 and 1."
             )
 
     maps = vision_result.feature_maps
+    raw_maps = vision_result.raw_feature_maps
 
-    _validate_map(maps.hed_map, "hed_map")
-    _validate_map(
-        maps.entropy_map,
-        "entropy_map",
-    )
-    _validate_map(
-        maps.variance_map,
-        "variance_map",
-    )
-    _validate_map(
-        maps.fused_heatmap,
-        "fused_heatmap",
-    )
+    if raw_maps is None:
+        raise CoverFeatureError(
+            "Raw feature maps are required "
+            "for cross-cover comparison."
+        )
+
+    normalized_maps = {
+        "hed_map": maps.hed_map,
+        "entropy_map": maps.entropy_map,
+        "variance_map": maps.variance_map,
+        "fused_heatmap": (
+            maps.fused_heatmap
+        ),
+    }
+
+    raw_feature_maps = {
+        "raw_hed_map": raw_maps.hed_map,
+        "raw_entropy_map": (
+            raw_maps.entropy_map
+        ),
+        "raw_variance_map": (
+            raw_maps.variance_map
+        ),
+    }
+
+    for name, feature_map in {
+        **normalized_maps,
+        **raw_feature_maps,
+    }.items():
+        _validate_map(
+            feature_map,
+            name,
+        )
 
     expected_shape = (
         vision_result.image_info.height,
         vision_result.image_info.width,
     )
 
-    if not all(
-        feature_map.shape == expected_shape
-        for feature_map in [
-            maps.hed_map,
-            maps.entropy_map,
-            maps.variance_map,
-            maps.fused_heatmap,
-        ]
-    ):
-        raise CoverFeatureError(
-            "Feature-map dimensions do not match image information."
-        )
+    for name, feature_map in {
+        **normalized_maps,
+        **raw_feature_maps,
+    }.items():
+        if feature_map.shape != expected_shape:
+            raise CoverFeatureError(
+                f"{name} dimensions do not "
+                "match image information."
+            )
 
     hed_stats = _map_statistics(
         maps.hed_map
@@ -222,9 +253,67 @@ def extract_cover_features(
         maps.fused_heatmap
     )
 
+    raw_hed_mean = float(
+        np.mean(raw_maps.hed_map)
+    )
+
+    raw_hed_std = float(
+        np.std(raw_maps.hed_map)
+    )
+
+    raw_entropy_mean = float(
+        np.mean(raw_maps.entropy_map)
+    )
+
+    raw_entropy_std = float(
+        np.std(raw_maps.entropy_map)
+    )
+
+    raw_variance_mean = float(
+        np.mean(raw_maps.variance_map)
+    )
+
+    raw_variance_std = float(
+        np.std(raw_maps.variance_map)
+    )
+
+    # Maximum Shannon entropy with 32 bins:
+    # log2(32) = 5.
+    entropy_strength = float(
+        np.clip(
+            raw_entropy_mean / 5.0,
+            0.0,
+            1.0,
+        )
+    )
+
+    # Maximum theoretical variance for values from 0 to 255:
+    # (255 - 0)^2 / 4 = 16256.25.
+    variance_strength = float(
+        np.clip(
+            raw_variance_mean / 16256.25,
+            0.0,
+            1.0,
+        )
+    )
+
+    hed_strength = float(
+        np.clip(
+            raw_hed_mean,
+            0.0,
+            1.0,
+        )
+    )
+
+    texture_score = float(
+        0.30 * hed_strength
+        + 0.40 * entropy_strength
+        + 0.30 * variance_strength
+    )
+
     edge_density = float(
         np.mean(
-            maps.hed_map
+            raw_maps.hed_map
             >= edge_threshold
         )
     )
@@ -262,6 +351,23 @@ def extract_cover_features(
             .original_format
         ),
 
+        raw_hed_mean=raw_hed_mean,
+        raw_hed_std=raw_hed_std,
+
+        raw_entropy_mean=(
+            raw_entropy_mean
+        ),
+        raw_entropy_std=(
+            raw_entropy_std
+        ),
+
+        raw_variance_mean=(
+            raw_variance_mean
+        ),
+        raw_variance_std=(
+            raw_variance_std
+        ),
+
         hed_mean=hed_stats["mean"],
         hed_std=hed_stats["std"],
         hed_p25=hed_stats["p25"],
@@ -295,34 +401,32 @@ def extract_cover_features(
         ),
 
         block_size=(
-            vision_result.block_map.block_size
+            vision_result.block_map
+            .block_size
         ),
         total_blocks=(
-            vision_result
-            .block_map
+            vision_result.block_map
             .total_block_count
         ),
         selected_blocks=(
-            vision_result
-            .block_map
+            vision_result.block_map
             .selected_block_count
         ),
         selected_percentage=(
-            vision_result
-            .block_map
+            vision_result.block_map
             .selected_percentage
         ),
 
         encoded_map_bytes=(
-            vision_result
-            .map_encoding
+            vision_result.map_encoding
             .encoded_byte_count
         ),
         map_compression_ratio=(
-            vision_result
-            .map_encoding
+            vision_result.map_encoding
             .compression_ratio
         ),
+
+        texture_score=texture_score,
 
         analysis_time_seconds=float(
             vision_result.timings.get(
@@ -337,7 +441,7 @@ def write_cover_features_csv(
     features: list[CoverFeatures],
     output_path: str | Path,
 ) -> Path:
-    """Write cover characteristics to a CSV file."""
+    """Write cover characteristics to CSV."""
 
     if not features:
         raise CoverFeatureError(

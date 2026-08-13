@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from time import perf_counter
 
+import numpy as np
+
 from backend.vision.block_map import (
     generate_capacity_aware_block_map,
 )
@@ -36,6 +38,7 @@ from backend.vision.preprocessing import (
     rgb_to_luminance,
 )
 from backend.vision.schemas import (
+    RawFeatureMaps,
     VisionAnalysisResult,
 )
 from backend.vision.variance_map import (
@@ -48,12 +51,7 @@ class VisionServiceError(RuntimeError):
 
 
 class GuardianPixelVisionService:
-    """
-    Reusable sender-side vision-analysis service.
-
-    The HED model is loaded once when this service is created and can
-    then be reused for multiple cover images.
-    """
+    """Reusable sender-side image-analysis service."""
 
     def __init__(
         self,
@@ -86,12 +84,16 @@ class GuardianPixelVisionService:
                     tile_size=(
                         config.hed.tile_size
                     ),
-                    overlap=config.hed.overlap,
+                    overlap=(
+                        config.hed.overlap
+                    ),
                 )
             )
 
         else:
-            self.hed_predictor = hed_predictor
+            self.hed_predictor = (
+                hed_predictor
+            )
 
     def analyze_cover(
         self,
@@ -104,66 +106,151 @@ class GuardianPixelVisionService:
 
         total_start = perf_counter()
 
+        # ---------------------------------------------------------
+        # 1. Image preprocessing
+        # ---------------------------------------------------------
+
         preprocessing_start = perf_counter()
 
-        rgb, image_info = load_and_validate_image(
-            source,
-            max_pixels=(
-                self.config.image.max_pixels
-            ),
+        rgb, image_info = (
+            load_and_validate_image(
+                source,
+                max_pixels=(
+                    self.config
+                    .image
+                    .max_pixels
+                ),
+            )
         )
 
-        luminance = rgb_to_luminance(rgb)
+        luminance = rgb_to_luminance(
+            rgb
+        )
 
         preprocessing_seconds = (
             perf_counter()
             - preprocessing_start
         )
 
+        # ---------------------------------------------------------
+        # 2. Raw HED map
+        # ---------------------------------------------------------
+
         hed_start = perf_counter()
 
-        raw_hed = self.hed_predictor.predict(
-            rgb
+        raw_hed = (
+            self.hed_predictor.predict(
+                rgb
+            )
         )
 
         hed_seconds = (
             perf_counter() - hed_start
         )
 
+        # ---------------------------------------------------------
+        # 3. Raw entropy map
+        # ---------------------------------------------------------
+
         entropy_start = perf_counter()
 
-        raw_entropy = calculate_local_entropy(
-            luminance,
-            window_size=(
-                self.config
-                .texture
-                .entropy_window
-            ),
-            bins=(
-                self.config
-                .texture
-                .entropy_bins
-            ),
+        raw_entropy = (
+            calculate_local_entropy(
+                luminance,
+                window_size=(
+                    self.config
+                    .texture
+                    .entropy_window
+                ),
+                bins=(
+                    self.config
+                    .texture
+                    .entropy_bins
+                ),
+            )
         )
 
         entropy_seconds = (
-            perf_counter() - entropy_start
+            perf_counter()
+            - entropy_start
         )
+
+        # ---------------------------------------------------------
+        # 4. Raw variance map
+        # ---------------------------------------------------------
 
         variance_start = perf_counter()
 
-        raw_variance = calculate_local_variance(
-            luminance,
-            window_size=(
-                self.config
-                .texture
-                .variance_window
-            ),
+        raw_variance = (
+            calculate_local_variance(
+                luminance,
+                window_size=(
+                    self.config
+                    .texture
+                    .variance_window
+                ),
+            )
         )
 
         variance_seconds = (
-            perf_counter() - variance_start
+            perf_counter()
+            - variance_start
         )
+
+        # ---------------------------------------------------------
+        # 5. Validate raw-map alignment
+        # ---------------------------------------------------------
+
+        expected_shape = (
+            image_info.height,
+            image_info.width,
+        )
+
+        for raw_name, raw_map in [
+            ("raw_hed", raw_hed),
+            (
+                "raw_entropy",
+                raw_entropy,
+            ),
+            (
+                "raw_variance",
+                raw_variance,
+            ),
+        ]:
+            if raw_map.shape != expected_shape:
+                raise VisionServiceError(
+                    f"{raw_name} shape "
+                    f"{raw_map.shape} does not "
+                    f"match {expected_shape}."
+                )
+
+            if not np.all(
+                np.isfinite(raw_map)
+            ):
+                raise VisionServiceError(
+                    f"{raw_name} contains "
+                    "invalid numerical values."
+                )
+
+        # Create independent raw-map copies for compatibility work.
+        raw_feature_maps = RawFeatureMaps(
+            hed_map=np.asarray(
+                raw_hed,
+                dtype=np.float32,
+            ).copy(),
+            entropy_map=np.asarray(
+                raw_entropy,
+                dtype=np.float32,
+            ).copy(),
+            variance_map=np.asarray(
+                raw_variance,
+                dtype=np.float32,
+            ).copy(),
+        )
+
+        # ---------------------------------------------------------
+        # 6. Normalize and fuse HED, entropy and variance
+        # ---------------------------------------------------------
 
         fusion_start = perf_counter()
 
@@ -194,8 +281,13 @@ class GuardianPixelVisionService:
         )
 
         fusion_seconds = (
-            perf_counter() - fusion_start
+            perf_counter()
+            - fusion_start
         )
+
+        # ---------------------------------------------------------
+        # 7. Capacity-aware 8×8 block selection
+        # ---------------------------------------------------------
 
         block_start = perf_counter()
 
@@ -233,8 +325,13 @@ class GuardianPixelVisionService:
         )
 
         block_seconds = (
-            perf_counter() - block_start
+            perf_counter()
+            - block_start
         )
+
+        # ---------------------------------------------------------
+        # 8. Encode the binary location map
+        # ---------------------------------------------------------
 
         encoding_start = perf_counter()
 
@@ -243,11 +340,17 @@ class GuardianPixelVisionService:
         )
 
         encoding_seconds = (
-            perf_counter() - encoding_start
+            perf_counter()
+            - encoding_start
         )
 
+        # ---------------------------------------------------------
+        # 9. Timing and configuration information
+        # ---------------------------------------------------------
+
         total_seconds = (
-            perf_counter() - total_start
+            perf_counter()
+            - total_start
         )
 
         tile_count = getattr(
@@ -264,14 +367,20 @@ class GuardianPixelVisionService:
             "entropy": entropy_seconds,
             "variance": variance_seconds,
             "fusion": fusion_seconds,
-            "block_selection": block_seconds,
-            "map_encoding": encoding_seconds,
+            "block_selection": (
+                block_seconds
+            ),
+            "map_encoding": (
+                encoding_seconds
+            ),
             "total": total_seconds,
         }
 
         config_used = {
             "hed_framework": (
-                self.config.hed.framework
+                self.config
+                .hed
+                .framework
             ),
             "hed_device": (
                 self.config
@@ -279,12 +388,18 @@ class GuardianPixelVisionService:
                 .resolved_device
             ),
             "hed_tile_size": (
-                self.config.hed.tile_size
+                self.config
+                .hed
+                .tile_size
             ),
             "hed_overlap": (
-                self.config.hed.overlap
+                self.config
+                .hed
+                .overlap
             ),
-            "hed_tile_count": tile_count,
+            "hed_tile_count": (
+                tile_count
+            ),
             "entropy_window": (
                 self.config
                 .texture
@@ -329,11 +444,18 @@ class GuardianPixelVisionService:
             ),
         }
 
+        # ---------------------------------------------------------
+        # 10. Return normalized and raw maps
+        # ---------------------------------------------------------
+
         return VisionAnalysisResult(
             image_info=image_info,
             feature_maps=feature_maps,
             block_map=block_map,
             map_encoding=map_encoding,
+            raw_feature_maps=(
+                raw_feature_maps
+            ),
             timings=timings,
             config_used=config_used,
         )
@@ -348,12 +470,7 @@ def analyze_cover(
     channels_per_selected_pixel: int = 1,
     reserved_position_count: int = 0,
 ) -> VisionAnalysisResult:
-    """
-    Convenience function for one-off analysis.
-
-    Flask should eventually create one service object and reuse it
-    instead of loading HED for every request.
-    """
+    """Convenience function for one-off cover analysis."""
 
     config = load_vision_config(
         config_path

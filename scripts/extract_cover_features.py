@@ -8,6 +8,7 @@ from pathlib import Path
 
 from backend.compatibility.categories import (
     fit_category_thresholds,
+    load_category_thresholds,
     save_category_thresholds,
     write_categorized_features_csv,
 )
@@ -35,7 +36,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Extract GuardianPixel cover features "
-            "and calculate texture categories."
+            "and calculate or apply texture categories."
         )
     )
 
@@ -59,6 +60,19 @@ def main() -> None:
             "experiments/results/"
             "category_thresholds.json"
         ),
+        help=(
+            "Path used to save newly fitted "
+            "training thresholds."
+        ),
+    )
+
+    parser.add_argument(
+        "--load-thresholds",
+        default=None,
+        help=(
+            "Load fixed category thresholds "
+            "instead of fitting new thresholds."
+        ),
     )
 
     parser.add_argument(
@@ -72,10 +86,11 @@ def main() -> None:
     parser.add_argument(
         "--probe-bits",
         type=int,
-        default=1000,
+        default=0,
         help=(
-            "Small standard payload used only "
-            "for block-selection statistics."
+            "Optional payload bits used only for "
+            "block-selection statistics. Use 0 "
+            "for payload-independent cover analysis."
         ),
     )
 
@@ -86,9 +101,9 @@ def main() -> None:
 
     arguments = parser.parse_args()
 
-    if arguments.probe_bits <= 0:
+    if arguments.probe_bits < 0:
         parser.error(
-            "--probe-bits must be positive."
+            "--probe-bits cannot be negative."
         )
 
     input_directory = Path(
@@ -97,7 +112,8 @@ def main() -> None:
 
     if not input_directory.is_dir():
         raise SystemExit(
-            "Input directory was not found."
+            f"Input directory was not found: "
+            f"{input_directory}"
         )
 
     image_paths = sorted(
@@ -110,9 +126,18 @@ def main() -> None:
         )
     )
 
-    if len(image_paths) < 4:
+    if not image_paths:
         raise SystemExit(
-            "At least four supported cover images are required."
+            "No supported images were found."
+        )
+
+    if (
+        not arguments.load_thresholds
+        and len(image_paths) < 4
+    ):
+        raise SystemExit(
+            "At least four images are required "
+            "when fitting new thresholds."
         )
 
     config = load_vision_config(
@@ -157,29 +182,61 @@ def main() -> None:
             )
 
         except Exception as error:
-            failures.append(
-                {
-                    "image": image_path.name,
-                    "error_type": (
-                        type(error).__name__
-                    ),
-                    "error": str(error),
-                }
-            )
+            failure = {
+                "image": image_path.name,
+                "error_type": (
+                    type(error).__name__
+                ),
+                "error": str(error),
+            }
+
+            failures.append(failure)
 
             print(
                 f"  Failed: "
-                f"{type(error).__name__}: {error}"
+                f"{failure['error_type']}: "
+                f"{failure['error']}"
             )
 
-    if len(features) < 4:
+    if not features:
         raise SystemExit(
-            "Fewer than four covers were processed successfully."
+            "No cover images were processed successfully."
         )
 
-    thresholds = fit_category_thresholds(
-        features
-    )
+    if arguments.load_thresholds:
+        thresholds = (
+            load_category_thresholds(
+                arguments.load_thresholds
+            )
+        )
+
+        thresholds_path = Path(
+            arguments.load_thresholds
+        )
+
+        threshold_mode = "loaded"
+
+    else:
+        if len(features) < 4:
+            raise SystemExit(
+                "Fewer than four covers were "
+                "processed successfully."
+            )
+
+        thresholds = (
+            fit_category_thresholds(
+                features
+            )
+        )
+
+        thresholds_path = (
+            save_category_thresholds(
+                thresholds,
+                arguments.thresholds_json,
+            )
+        )
+
+        threshold_mode = "fitted"
 
     csv_path = (
         write_categorized_features_csv(
@@ -188,13 +245,6 @@ def main() -> None:
             output_path=(
                 arguments.output_csv
             ),
-        )
-    )
-
-    thresholds_path = (
-        save_category_thresholds(
-            thresholds,
-            arguments.thresholds_json,
         )
     )
 
@@ -224,6 +274,9 @@ def main() -> None:
         f"Failed covers: {len(failures)}"
     )
     print(
+        f"Threshold mode: {threshold_mode}"
+    )
+    print(
         f"Smooth upper score: "
         f"{thresholds.smooth_upper:.6f}"
     )
@@ -235,6 +288,9 @@ def main() -> None:
     print(
         f"Thresholds JSON: "
         f"{thresholds_path}"
+    )
+    print(
+        f"Failures JSON: {failure_path}"
     )
 
 

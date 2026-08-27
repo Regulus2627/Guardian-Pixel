@@ -1,4 +1,4 @@
-"""Cover categorization using dataset texture-score percentiles."""
+"""Cover categorization using texture-score percentiles."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ class CategoryError(ValueError):
 
 @dataclass(frozen=True, slots=True)
 class CategoryThresholds:
-    """Texture-score boundaries calculated from pilot covers."""
+    """Texture-score category boundaries."""
 
     smooth_upper: float
     textured_lower: float
@@ -35,7 +35,7 @@ class CategoryThresholds:
 def fit_category_thresholds(
     features: list[CoverFeatures],
 ) -> CategoryThresholds:
-    """Use the 25th and 75th percentiles as boundaries."""
+    """Calculate thresholds from training-cover percentiles."""
 
     if len(features) < 4:
         raise CategoryError(
@@ -55,13 +55,22 @@ def fit_category_thresholds(
             "Texture scores contain invalid values."
         )
 
+    smooth_upper = float(
+        np.percentile(scores, 25)
+    )
+
+    textured_lower = float(
+        np.percentile(scores, 75)
+    )
+
+    if smooth_upper > textured_lower:
+        raise CategoryError(
+            "Calculated thresholds are invalid."
+        )
+
     return CategoryThresholds(
-        smooth_upper=float(
-            np.percentile(scores, 25)
-        ),
-        textured_lower=float(
-            np.percentile(scores, 75)
-        ),
+        smooth_upper=smooth_upper,
+        textured_lower=textured_lower,
     )
 
 
@@ -69,7 +78,15 @@ def categorize_texture_score(
     texture_score: float,
     thresholds: CategoryThresholds,
 ) -> str:
-    """Classify one texture score."""
+    """Classify one cover as Smooth, Mixed or Textured."""
+
+    if not isinstance(
+        thresholds,
+        CategoryThresholds,
+    ):
+        raise CategoryError(
+            "thresholds must be CategoryThresholds."
+        )
 
     if not np.isfinite(texture_score):
         raise CategoryError(
@@ -89,9 +106,18 @@ def save_category_thresholds(
     thresholds: CategoryThresholds,
     output_path: str | Path,
 ) -> Path:
-    """Save category thresholds as JSON."""
+    """Save fitted thresholds as JSON."""
+
+    if not isinstance(
+        thresholds,
+        CategoryThresholds,
+    ):
+        raise CategoryError(
+            "thresholds must be CategoryThresholds."
+        )
 
     path = Path(output_path)
+
     path.parent.mkdir(
         parents=True,
         exist_ok=True,
@@ -108,16 +134,92 @@ def save_category_thresholds(
     return path
 
 
+def load_category_thresholds(
+    input_path: str | Path,
+) -> CategoryThresholds:
+    """Load fixed category thresholds from JSON."""
+
+    path = Path(input_path)
+
+    if not path.exists():
+        raise CategoryError(
+            f"Threshold file was not found: {path}"
+        )
+
+    if not path.is_file():
+        raise CategoryError(
+            f"Threshold path is not a file: {path}"
+        )
+
+    try:
+        data = json.loads(
+            path.read_text(
+                encoding="utf-8"
+            )
+        )
+
+        smooth_upper = float(
+            data["smooth_upper"]
+        )
+
+        textured_lower = float(
+            data["textured_lower"]
+        )
+
+    except (
+        KeyError,
+        TypeError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as error:
+        raise CategoryError(
+            "Threshold file is invalid."
+        ) from error
+
+    if not np.isfinite(
+        smooth_upper
+    ) or not np.isfinite(
+        textured_lower
+    ):
+        raise CategoryError(
+            "Category thresholds must be finite."
+        )
+
+    if not (
+        0
+        <= smooth_upper
+        <= textured_lower
+        <= 1
+    ):
+        raise CategoryError(
+            "Category thresholds must satisfy "
+            "0 <= smooth <= textured <= 1."
+        )
+
+    return CategoryThresholds(
+        smooth_upper=smooth_upper,
+        textured_lower=textured_lower,
+    )
+
+
 def write_categorized_features_csv(
     features: list[CoverFeatures],
     thresholds: CategoryThresholds,
     output_path: str | Path,
 ) -> Path:
-    """Write cover features and calculated categories."""
+    """Write cover features and fixed categories to CSV."""
 
     if not features:
         raise CategoryError(
             "At least one cover feature row is required."
+        )
+
+    if not all(
+        isinstance(item, CoverFeatures)
+        for item in features
+    ):
+        raise CategoryError(
+            "Every item must be CoverFeatures."
         )
 
     rows = []

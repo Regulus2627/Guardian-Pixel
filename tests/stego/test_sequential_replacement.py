@@ -236,7 +236,7 @@ def test_invalid_bit_values_raises():
 
 
 def test_known_bit_pattern():
-    rgb = np.array([[[137, 200, 50]]], dtype=np.uint8)  # 1x1 pixel image
+    rgb = np.array([[[137, 200, 50]]], dtype=np.uint8)  # 1x1x3 pixel image
     bits = np.array([0], dtype=np.uint8)  # want LSB = 0
     stego = embed_sequential_lsb(rgb, bits, channel=0)
     assert stego[0, 0, 0] == 136

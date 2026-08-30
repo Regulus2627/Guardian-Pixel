@@ -16,7 +16,14 @@ class ImagePreprocessingError(ValueError):
     """Raised when a cover image cannot be safely processed."""
 
 
-ImageSource = str | Path | bytes | bytearray | BinaryIO
+ImageSource = (
+    str
+    | Path
+    | bytes
+    | bytearray
+    | BinaryIO
+    | np.ndarray
+)
 
 
 def _read_source_bytes(source: ImageSource) -> bytes:
@@ -80,7 +87,48 @@ def load_and_validate_image(
         raise ImagePreprocessingError(
             "max_pixels must be greater than zero."
         )
+    if isinstance(source, np.ndarray):
+        if source.ndim != 3 or source.shape[2] != 3:
+            raise ImagePreprocessingError(
+                "NumPy image input must have shape H×W×3."
+            )
 
+        if source.size == 0:
+            raise ImagePreprocessingError(
+                "NumPy image input cannot be empty."
+            )
+
+        if source.dtype != np.uint8:
+            raise ImagePreprocessingError(
+                "NumPy image input must use uint8 values."
+            )
+
+        height, width = source.shape[:2]
+
+        if width <= 0 or height <= 0:
+            raise ImagePreprocessingError(
+                "Image dimensions must be greater than zero."
+            )
+
+        total_pixels = width * height
+
+        if total_pixels > max_pixels:
+            raise ImagePreprocessingError(
+                f"Image contains {total_pixels:,} pixels, "
+                f"which exceeds the limit of {max_pixels:,}."
+            )
+
+        rgb_array = source.copy()
+
+        image_info = ImageInfo(
+            width=width,
+            height=height,
+            channels=3,
+            original_format="NUMPY",
+            original_mode="RGB",
+        )
+
+        return rgb_array, image_info
     data = _read_source_bytes(source)
 
     try:

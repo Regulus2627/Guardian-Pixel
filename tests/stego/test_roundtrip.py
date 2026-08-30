@@ -25,6 +25,7 @@ class FakeHEDPredictor:
 
     def __init__(self):
         self.last_tile_count = 1
+        self.call_count = 0
 
     def predict(
         self,
@@ -34,7 +35,7 @@ class FakeHEDPredictor:
             rgb.astype(np.float32),
             axis=2,
         )
-
+        self.call_count += 1        
         minimum = float(
             luminance.min()
         )
@@ -339,4 +340,84 @@ def test_saved_png_round_trip(tmp_path):
     assert (
         extracted.parsed_envelope.payload
         == b"saved PNG test"
+    )
+
+def test_precomputed_vision_is_reused():
+    cover = create_cover()
+
+    config = load_vision_config()
+
+    fake_hed = FakeHEDPredictor()
+
+    service = GuardianPixelVisionService(
+        config=config,
+        hed_predictor=fake_hed,
+    )
+
+    cached_result = service.analyze_cover(
+        source=cover,
+        required_payload_bits=0,
+        channels_per_selected_pixel=1,
+        reserved_position_count=0,
+    )
+
+    assert fake_hed.call_count == 1
+
+    first = embed_secret(
+        rgb=cover,
+        payload=b"first payload",
+        payload_type="text",
+        passphrase=PASSPHRASE,
+        vision_service=service,
+        mime_type="text/plain",
+        precomputed_vision_result=(
+            cached_result
+        ),
+    )
+
+    second = embed_secret(
+        rgb=cover,
+        payload=b"second larger payload" * 5,
+        payload_type="text",
+        passphrase=PASSPHRASE,
+        vision_service=service,
+        mime_type="text/plain",
+        precomputed_vision_result=(
+            cached_result
+        ),
+    )
+
+    # HED should not run again during either embedding.
+    assert fake_hed.call_count == 1
+
+    first_extracted = extract_secret(
+        first.stego_image,
+        PASSPHRASE,
+    )
+
+    second_extracted = extract_secret(
+        second.stego_image,
+        PASSPHRASE,
+    )
+
+    assert (
+        first_extracted
+        .parsed_envelope
+        .payload
+        == b"first payload"
+    )
+
+    assert (
+        second_extracted
+        .parsed_envelope
+        .payload
+        == b"second larger payload" * 5
+    )
+
+    # The cached cover analysis must not be modified.
+    assert (
+        cached_result
+        .block_map
+        .selected_block_count
+        == 0
     )

@@ -92,7 +92,7 @@ def _select_final_block_map(
     channels_per_selected_pixel: int,
     safety_margin: float,
     score_method: str,
-    maximum_iterations: int = 10,
+    maximum_iterations: int = 12,
 ) -> tuple[
     BlockMapResult,
     MapEncodingResult,
@@ -100,17 +100,13 @@ def _select_final_block_map(
     bytes,
 ]:
     """
-    Recalculate block selection until metadata size becomes stable.
+    Select a valid block map without requiring exact size equality.
 
-    Metadata size depends on map compression, while map selection also
-    depends on reserved metadata capacity.
+    A result is accepted as soon as the selected capacity can hold
+    the payload, bootstrap and actual serialized metadata.
     """
 
-    # Minimum metadata:
-    # 20-byte metadata header + 4-byte CRC.
     metadata_bit_estimate = 24 * 8
-
-    previous_state = None
 
     for _ in range(maximum_iterations):
         reserved_positions = (
@@ -157,8 +153,7 @@ def _select_final_block_map(
                 block_map.block_columns
             ),
             original_map_bit_count=(
-                map_encoding
-                .original_bit_count
+                map_encoding.original_bit_count
             ),
             encoded_map_data=(
                 map_encoding.encoded_data
@@ -169,22 +164,19 @@ def _select_final_block_map(
             serialize_metadata(metadata)
         )
 
-        new_metadata_bits = (
+        actual_metadata_bits = (
             len(metadata_bytes) * 8
         )
 
-        current_state = (
-            new_metadata_bits,
-            block_map.selected_block_count,
-            map_encoding.encoding_type,
-            map_encoding.encoded_byte_count,
+        actual_required_positions = (
+            block_map.target_position_count
+            - metadata_bit_estimate
+            + actual_metadata_bits
         )
 
         if (
-            new_metadata_bits
-            == metadata_bit_estimate
-            and current_state
-            == previous_state
+            block_map.selected_position_count
+            >= actual_required_positions
         ):
             return (
                 block_map,
@@ -193,15 +185,89 @@ def _select_final_block_map(
                 metadata_bytes,
             )
 
-        previous_state = current_state
-        metadata_bit_estimate = (
-            new_metadata_bits
+        metadata_bit_estimate = max(
+            actual_metadata_bits,
+            metadata_bit_estimate + 8,
         )
 
-    raise EmbedderError(
-        "Block-map metadata size did not stabilize."
+    # Guaranteed conservative fallback:
+    # map encoding cannot be larger than the raw packed bitmap.
+    block_rows = (
+        fused_heatmap.shape[0]
+        + block_size
+        - 1
+    ) // block_size
+
+    block_columns = (
+        fused_heatmap.shape[1]
+        + block_size
+        - 1
+    ) // block_size
+
+    raw_map_bytes = (
+        block_rows * block_columns
+        + 7
+    ) // 8
+
+    maximum_metadata_bits = (
+        24 + raw_map_bytes
+    ) * 8
+
+    block_map = (
+        generate_capacity_aware_block_map(
+            heatmap=fused_heatmap,
+            required_payload_bits=(
+                packet_bit_count
+            ),
+            block_size=block_size,
+            channels_per_selected_pixel=(
+                channels_per_selected_pixel
+            ),
+            reserved_position_count=(
+                BOOTSTRAP_BIT_COUNT
+                + maximum_metadata_bits
+            ),
+            safety_margin=safety_margin,
+            score_method=score_method,
+        )
     )
 
+    map_encoding = encode_block_map(
+        block_map.selected_blocks
+    )
+
+    metadata = LocationMetadata(
+        encoding_type=(
+            map_encoding.encoding_type
+        ),
+        embedding_policy=(
+            EMBEDDING_POLICY_ADAPTIVE_LSB
+        ),
+        channels_per_selected_pixel=(
+            channels_per_selected_pixel
+        ),
+        block_rows=block_map.block_rows,
+        block_columns=(
+            block_map.block_columns
+        ),
+        original_map_bit_count=(
+            map_encoding.original_bit_count
+        ),
+        encoded_map_data=(
+            map_encoding.encoded_data
+        ),
+    )
+
+    metadata_bytes = serialize_metadata(
+        metadata
+    )
+
+    return (
+        block_map,
+        map_encoding,
+        metadata,
+        metadata_bytes,
+    )
 
 def embed_secret(
     rgb: np.ndarray,
@@ -213,6 +279,9 @@ def embed_secret(
     mime_type: str = "application/octet-stream",
     enable_compression: bool = True,
     channels_per_selected_pixel: int = 1,
+    precomputed_vision_result: (
+        VisionAnalysisResult | None
+    ) = None,
 ) -> EmbedResult:
     """Encrypt and embed a secret into an RGB cover image."""
 
@@ -244,21 +313,65 @@ def embed_secret(
 
     # One full AI/CV pass. The initial block result is replaced after
     # exact metadata-size stabilization below.
-    initial_vision_result = (
-        vision_service.analyze_cover(
-            source=rgb,
-            required_payload_bits=(
-                packet_bit_count
-            ),
-            channels_per_selected_pixel=(
-                channels_per_selected_pixel
-            ),
-            reserved_position_count=(
-                BOOTSTRAP_BIT_COUNT
-                + 24 * 8
-            ),
+    if precomputed_vision_result is None:
+        initial_vision_result = (
+            vision_service.analyze_cover(
+                source=rgb,
+                required_payload_bits=(
+                    packet_bit_count
+                ),
+                channels_per_selected_pixel=(
+                    channels_per_selected_pixel
+                ),
+                reserved_position_count=(
+                    BOOTSTRAP_BIT_COUNT
+                    + 24 * 8
+                ),
+            )
         )
-    )
+
+    else:
+        if not isinstance(
+            precomputed_vision_result,
+            VisionAnalysisResult,
+        ):
+            raise EmbedderError(
+                "precomputed_vision_result must be "
+                "VisionAnalysisResult or None."
+            )
+
+        if (
+            precomputed_vision_result
+            .image_info
+            .height
+            != rgb.shape[0]
+            or precomputed_vision_result
+            .image_info
+            .width
+            != rgb.shape[1]
+        ):
+            raise EmbedderError(
+                "Precomputed vision result dimensions "
+                "do not match the cover image."
+            )
+
+        expected_shape = rgb.shape[:2]
+
+        if (
+            precomputed_vision_result
+            .feature_maps
+            .fused_heatmap
+            .shape
+            != expected_shape
+        ):
+            raise EmbedderError(
+                "Precomputed fused heatmap dimensions "
+                "do not match the cover image."
+            )
+
+        initial_vision_result = (
+            precomputed_vision_result
+        )
 
     config = vision_service.config
 
@@ -470,12 +583,25 @@ def embed_secret(
         difference.max()
     )
 
-    initial_vision_result.block_map = (
-        final_block_map
-    )
-
-    initial_vision_result.map_encoding = (
-        final_map_encoding
+    final_vision_result = VisionAnalysisResult(
+        image_info=(
+            initial_vision_result.image_info
+        ),
+        feature_maps=(
+            initial_vision_result.feature_maps
+        ),
+        block_map=final_block_map,
+        map_encoding=final_map_encoding,
+        raw_feature_maps=(
+            initial_vision_result
+            .raw_feature_maps
+        ),
+        timings=dict(
+            initial_vision_result.timings
+        ),
+        config_used=dict(
+            initial_vision_result.config_used
+        ),
     )
 
     return EmbedResult(
@@ -489,7 +615,7 @@ def embed_secret(
         block_map=final_block_map,
         map_encoding=final_map_encoding,
         vision_result=(
-            initial_vision_result
+            final_vision_result
         ),
         bootstrap_positions=(
             bootstrap_positions

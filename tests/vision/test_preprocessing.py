@@ -152,3 +152,73 @@ def test_invalid_rgb_shape_is_rejected():
         match="shape",
     ):
         rgb_to_luminance(grayscale)
+
+def test_numpy_rgb_image_is_accepted():
+    rgb = np.full(
+        (24, 32, 3),
+        100,
+        dtype=np.uint8,
+    )
+
+    processed, info = (
+        load_and_validate_image(
+            rgb,
+            max_pixels=1_000_000,
+        )
+    )
+
+    assert processed.shape == (24, 32, 3)
+    assert processed.dtype == np.uint8
+    assert info.width == 32
+    assert info.height == 24
+    assert info.original_format == "NUMPY"
+    assert info.original_mode == "RGB"
+
+
+def test_numpy_input_is_copied():
+    rgb = np.full(
+        (10, 10, 3),
+        100,
+        dtype=np.uint8,
+    )
+
+    processed, _ = load_and_validate_image(
+        rgb,
+        max_pixels=1_000_000,
+    )
+
+    processed[0, 0, 0] = 200
+
+    assert rgb[0, 0, 0] == 100
+
+
+def test_invalid_numpy_dtype_is_rejected():
+    rgb = np.zeros(
+        (10, 10, 3),
+        dtype=np.float32,
+    )
+
+    with pytest.raises(
+        ImagePreprocessingError,
+        match="uint8",
+    ):
+        load_and_validate_image(
+            rgb,
+            max_pixels=1_000_000,
+        )
+
+
+def test_invalid_numpy_shape_is_rejected():
+    grayscale = np.zeros(
+        (10, 10),
+        dtype=np.uint8,
+    )
+
+    with pytest.raises(
+        ImagePreprocessingError,
+        match="H×W×3",
+    ):
+        load_and_validate_image(
+            grayscale,
+            max_pixels=1_000_000,
+        )

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -45,16 +45,22 @@ export const CompatibilityPage: React.FC = () => {
   const {
     coverDataUrl,
     coverMeta,
-    payloadText,
     setCover,
     setPayloadText,
     setPayloadKind,
   } = useDemo();
 
-  const [text, setText] = useState<string>(payloadText || '');
+  const [text, setText] = useState<string>('');
   const [result, setResult] = useState<RealCompatibilityResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCover('', null as any, '');
+    setPayloadText('');
+    setResult(null);
+    setError(null);
+  }, [setCover, setPayloadText]);
 
   const characterCount = text.length;
 

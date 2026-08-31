@@ -22,7 +22,7 @@ export const MethodologyPage: React.FC = () => {
           </h1>
         </div>
         <p className="text-sm text-slate-400 max-w-3xl">
-          Theoretical architecture, algorithmic pipelines, quality metrics, carrier threat models, and simulation disclosures for the StegoLab platform.
+          Theoretical architecture, algorithmic pipelines, quality metrics, carrier threat models, and simulation disclosures for the GuardianPixel platform.
         </p>
       </div>
 

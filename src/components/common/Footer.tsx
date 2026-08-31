@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="flex items-center gap-1.5 text-slate-300 font-medium">
             <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
-            StegoLab Scientific Evaluation Platform
+            GuardianPixel Scientific Evaluation Platform
           </div>
           <span className="hidden sm:inline text-slate-700">|</span>
           <p className="text-slate-500 text-center sm:text-left">

@@ -148,7 +148,7 @@ export const HomePage: React.FC = () => {
       {/* Six-Stage Steganographic Workflow */}
       <div className="flex flex-col gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">The StegoLab Research Workflow</h2>
+          <h2 className="text-2xl font-bold text-white tracking-tight">The GuardianPixel Research Workflow</h2>
           <p className="text-sm text-slate-400 mt-1">
             Follow the empirical research cycle from cover compatibility validation to extraction and residual differential analysis.
           </p>

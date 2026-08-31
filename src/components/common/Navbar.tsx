@@ -49,12 +49,12 @@ export const Navbar: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-base tracking-tight text-white">StegoLab</span>
+                <span className="font-bold text-base tracking-tight text-white">GuardianPixel</span>
                 <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">
                   v1.0
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 hidden sm:block">Steganography & Carrier Workbench</p>
+              <p className="text-[10px] text-slate-400 hidden sm:block">AI-Guided Secure Steganography</p>
             </div>
           </NavLink>
 

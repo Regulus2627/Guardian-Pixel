@@ -194,7 +194,7 @@ export function getSampleSecretImage(): string {
 
 export const SAMPLE_TEXT_PAYLOADS = {
   short: 'Operation Aegis: Extraction waypoint alpha coordinates 37.7749 N, 122.4194 W. Passphrase rotation window 0600Z.',
-  medium: `CLASSIFIED LAB DIRECTIVE // PROJECT STEGOLAB
+  medium: `CLASSIFIED LAB DIRECTIVE // PROJECT GUARDIANPIXEL
 ==================================================
 Date: 2026-08-14 | Clearance: Tier-3 Scientific
 
@@ -236,7 +236,7 @@ export function getUnifiedDemoData(): UnifiedDemoState {
   const coverImage = covers[0]; // High texture rich granite
   const secretImage = getSampleSecretImage();
   const sampleText = SAMPLE_TEXT_PAYLOADS.medium;
-  const samplePassphrase = 'StegoLab-Alpha-Key2026';
+  const samplePassphrase = 'GuardianPixel-Alpha-Key2026';
 
   const rawBytes = new TextEncoder().encode(sampleText).length;
 

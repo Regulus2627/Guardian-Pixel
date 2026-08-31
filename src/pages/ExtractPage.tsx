@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDemo } from '../context/DemoContext';
 import { ImageUploader } from '../components/common/ImageUploader';
-import { SimulatedBadge } from '../components/common/SimulatedBadge';
+// import { SimulatedBadge } from '../components/common/SimulatedBadge';
+import { RealMathBadge } from '../components/common/RealMathBadge';
 import { extractPayload } from '../services/steganography/stegoService';
 import { ExtractionResult, CoverImageMeta } from '../types';
 import { downloadDataUrl, downloadText } from '../utils/download';
@@ -101,7 +102,7 @@ export const ExtractPage: React.FC = () => {
           <div className="flex items-center gap-2 mb-1">
             <FileKey className="w-6 h-6 text-brand-400" />
             <h1 className="text-2xl font-bold tracking-tight text-white">Steganographic Extraction Suite</h1>
-            <SimulatedBadge label="Simulated Engine" />
+            <RealMathBadge label="Real Flask Backend" />
           </div>
           <p className="text-sm text-slate-400 max-w-3xl">
             Authenticate, decrypt, and recover secret payloads from stego carriers. Validates tamper integrity with strict error isolation.
@@ -212,7 +213,7 @@ export const ExtractPage: React.FC = () => {
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
                   <h3 className="text-base font-bold text-white">Payload Successfully Recovered</h3>
                 </div>
-                <SimulatedBadge />
+                <RealMathBadge />
               </div>
 
               {/* Status Header */}
@@ -234,7 +235,7 @@ export const ExtractPage: React.FC = () => {
                 <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
                   <span className="text-slate-500 block text-[10px]">Integrity Check</span>
                   <span className="font-mono font-semibold text-teal-300">
-                    {extractionResult.integrityVerified ? 'HMAC-SHA256 OK' : 'Unverified'}
+                    {extractionResult.integrityVerified ? 'AES-GCM + SHA-256 OK' : 'Unverified'}
                   </span>
                 </div>
               </div>

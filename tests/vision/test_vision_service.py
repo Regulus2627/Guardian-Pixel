@@ -34,18 +34,27 @@ class FakeHEDPredictor:
             axis=2,
         )
 
+        minimum = float(
+            luminance.min()
+        )
+
         maximum = float(
             luminance.max()
         )
 
-        if maximum <= 0:
+        value_range = maximum - minimum
+
+        if value_range <= 0:
             return np.zeros(
                 rgb.shape[:2],
                 dtype=np.float32,
             )
 
         return (
-            luminance / maximum
+            (
+                luminance - minimum
+            )
+            / value_range
         ).astype(np.float32)
 
 
@@ -67,18 +76,24 @@ def create_test_image_bytes(
     image = Image.fromarray(rgb)
 
     buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+
+    image.save(
+        buffer,
+        format="PNG",
+    )
 
     return buffer.getvalue()
 
 
-def test_complete_vision_service():
-    config = load_vision_config()
-
-    service = GuardianPixelVisionService(
-        config=config,
+def create_service():
+    return GuardianPixelVisionService(
+        config=load_vision_config(),
         hed_predictor=FakeHEDPredictor(),
     )
+
+
+def test_complete_vision_service():
+    service = create_service()
 
     result = service.analyze_cover(
         source=create_test_image_bytes(),
@@ -87,10 +102,10 @@ def test_complete_vision_service():
         reserved_position_count=0,
     )
 
+    expected_shape = (128, 128)
+
     assert result.image_info.width == 128
     assert result.image_info.height == 128
-
-    expected_shape = (128, 128)
 
     assert (
         result.feature_maps.hed_map.shape
@@ -114,6 +129,29 @@ def test_complete_vision_service():
     )
 
     assert (
+        result.raw_feature_maps
+        is not None
+    )
+
+    assert (
+        result.raw_feature_maps
+        .hed_map.shape
+        == expected_shape
+    )
+
+    assert (
+        result.raw_feature_maps
+        .entropy_map.shape
+        == expected_shape
+    )
+
+    assert (
+        result.raw_feature_maps
+        .variance_map.shape
+        == expected_shape
+    )
+
+    assert (
         result.block_map
         .usable_position_count
         >= 2200
@@ -123,12 +161,7 @@ def test_complete_vision_service():
 
 
 def test_encoded_map_decodes_exactly():
-    config = load_vision_config()
-
-    service = GuardianPixelVisionService(
-        config=config,
-        hed_predictor=FakeHEDPredictor(),
-    )
+    service = create_service()
 
     result = service.analyze_cover(
         source=create_test_image_bytes(),
@@ -155,28 +188,24 @@ def test_encoded_map_decodes_exactly():
 
     assert np.array_equal(
         decoded,
-        result.block_map
-        .selected_blocks,
+        result.block_map.selected_blocks,
     )
 
 
 def test_service_is_deterministic():
-    config = load_vision_config()
+    service = create_service()
 
-    service = GuardianPixelVisionService(
-        config=config,
-        hed_predictor=FakeHEDPredictor(),
+    image_data = (
+        create_test_image_bytes()
     )
 
-    image_data = create_test_image_bytes()
-
     first = service.analyze_cover(
-        image_data,
+        source=image_data,
         required_payload_bits=1500,
     )
 
     second = service.analyze_cover(
-        image_data,
+        source=image_data,
         required_payload_bits=1500,
     )
 
@@ -197,14 +226,12 @@ def test_service_is_deterministic():
 
 
 def test_insufficient_capacity_is_rejected():
-    config = load_vision_config()
+    service = create_service()
 
-    service = GuardianPixelVisionService(
-        config=config,
-        hed_predictor=FakeHEDPredictor(),
-    )
-
-    with pytest.raises(BlockMapError):
+    with pytest.raises(
+        BlockMapError,
+        match="does not provide enough capacity",
+    ):
         service.analyze_cover(
             source=create_test_image_bytes(
                 width=32,

@@ -11,9 +11,18 @@ def embed_sequential_lsb(
 ) -> np.ndarray:
     """Embed bits sequentially into the LSB of one RGB channel."""
 
-    bits = np.asarray(bits, dtype=np.uint8)
+    if rgb.ndim != 3 or rgb.shape[2] != 3 or rgb.size == 0:
+        raise ValueError("RGB must be a non-empty 3 channel image.")
+
+    bits = np.asarray(bits)
+
+    if bits.ndim != 1:
+        raise ValueError("Bits array must be 1 dimensional.")
+
     if bits.size > 0 and not np.all((bits == 0) | (bits == 1)):
         raise ValueError("Bits must contain only 0 or 1.")
+
+    bits = np.asarray(bits, dtype=np.uint8)
 
     if channel not in (0, 1, 2):
         raise ValueError("Channel must be 0, 1, or 2.")
@@ -37,6 +46,9 @@ def extract_sequential_lsb(
     channel: int = 2,
 ) -> np.ndarray:
     """Extract bits sequentially from the LSB of one RGB channel."""
+
+    if stego.ndim != 3 or stego.shape[2] != 3 or stego.size == 0:
+        raise ValueError("Stego must be a non-empty 3 channel image.")
 
     if channel not in (0, 1, 2):
         raise ValueError("Channel must be 0, 1, or 2.")

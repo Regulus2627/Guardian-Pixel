@@ -27,7 +27,7 @@ export const METHODS = [
   'LSB-Sequential',
   'Adaptive-Edge-LSB',
   'DCT-Frequency-Domain',
-  'StegEx-ExactNet',
+  'GuardianPixel-HED-Adaptive-LSB',
   'DenseAutoencoder-Approx',
 ] as const;
 
@@ -105,7 +105,7 @@ export function generateDeterministicDataset(seed = 94820): ExperimentRow[] {
           baseMse = 0.85 + (bpp * 5.2);
           baseDetection = 0.12 + (bpp * 0.55) / categoryTextureMod;
           baseTime = 340 + (payloadBytes / 1024) * 0.8;
-        } else if (method === 'StegEx-ExactNet') {
+        } else if (method === 'GuardianPixel-HED-Adaptive-LSB') {
           basePsnr = 56.5 - (bpp * 10.5) + rng.range(-0.5, 0.5);
           baseSsim = 0.998 - (bpp * 0.015) + rng.range(-0.001, 0.001);
           baseMse = 0.28 + (bpp * 1.8);

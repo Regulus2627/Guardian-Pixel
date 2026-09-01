@@ -360,6 +360,7 @@ export const EmbedPage: React.FC = () => {
             <ImageUploader
               currentDataUrl={coverDataUrl}
               currentMeta={coverMeta}
+              showSamplePresets={false}
               onImageSelected={(dataUrl, meta, title) =>
                 setCover(dataUrl, meta, title)
               }

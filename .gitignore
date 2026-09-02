@@ -73,3 +73,28 @@ Thumbs.db
 # Testing / coverage
 coverage/
 
+# Local datasets
+datasets/
+
+# Generated experiment outputs
+experiments/results/
+
+# Local covers and compatibility samples
+sample_data/compatibility_covers/
+sample_data/covers/
+
+# Secret and generated output files
+sample_data/secrets/
+sample_data/outputs/
+sample_data/vision_outputs/
+
+# Python and frontend environments
+.venv/
+node_modules/
+dist/
+
+# HED model weights
+backend/models/hed/*.caffemodel
+
+# Local backups
+backups/

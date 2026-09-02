@@ -17,6 +17,9 @@ from backend.api.extract import (
 from backend.api.health import (
     health_blueprint,
 )
+from backend.api.compare import (
+    compare_blueprint,
+)
 from backend.web_config import (
     WebConfig,
 )
@@ -64,6 +67,9 @@ def create_app(
 
     app.register_blueprint(
         extract_blueprint
+    )
+    app.register_blueprint(
+        compare_blueprint
     )
 
     @app.get("/")

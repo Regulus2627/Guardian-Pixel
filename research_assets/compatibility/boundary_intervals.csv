@@ -1,0 +1,4 @@
+"Image","Category","Width","Height","LargestTestedPassBytes","SmallestTestedFailBytes","SafeLowerBound","UnsafeUpperBound"
+"0806.png","Mixed","2040","1356","375000","390000","375000","390000"
+"0807.png","Textured","2040","1128","310000","325000","310000","325000"
+"0808.png","Mixed","2040","1356","375000","390000","375000","390000"

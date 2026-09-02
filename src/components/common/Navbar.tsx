@@ -29,7 +29,7 @@ const navItems: NavItem[] = [
   { name: 'Compatibility', path: '/compatibility', icon: ShieldCheck },
   { name: 'Embed', path: '/embed', icon: Cpu },
   { name: 'Extract', path: '/extract', icon: FileKey },
-  { name: 'Compare', path: '/compare', icon: Sliders, badge: 'Pending' },
+  { name: 'Compare', path: '/compare', icon: Sliders, badge: '' },
   { name: 'Research', path: '/research', icon: BarChart3, badge: 'Pending' },
   { name: 'Methodology', path: '/methodology', icon: BookOpen },
 ];

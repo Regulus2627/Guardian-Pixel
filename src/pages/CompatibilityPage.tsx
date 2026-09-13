@@ -5,7 +5,9 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  FileCode,
   FileText,
+  Image as ImageIcon,
   Loader2,
   ShieldCheck,
 } from 'lucide-react';
@@ -16,7 +18,16 @@ import {
   assessRealCompatibility,
   RealCompatibilityResult,
 } from '../services/compatibility/compatibilityService';
-import { formatBytes } from '../utils/imageProcessing';
+import { formatBytes, readFileAsDataUrl } from '../utils/imageProcessing';
+
+type CompatMode = 'text' | 'file' | 'image';
+
+type UploadedPayload = {
+  name: string;
+  size: number;
+  type: string;
+  dataUrl: string;
+};
 
 function formatInteger(value: number): string {
   return Math.round(value).toLocaleString();
@@ -50,7 +61,12 @@ export const CompatibilityPage: React.FC = () => {
     setPayloadKind,
   } = useDemo();
 
+  const [mode, setMode] = useState<CompatMode>('text');
+
   const [text, setText] = useState<string>('');
+  const [uploadedFile, setUploadedFile] = useState<UploadedPayload | null>(null);
+  const [secretImage, setSecretImage] = useState<UploadedPayload | null>(null);
+
   const [result, setResult] = useState<RealCompatibilityResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -68,9 +84,54 @@ export const CompatibilityPage: React.FC = () => {
     return new TextEncoder().encode(text).length;
   }, [text]);
 
+  // Real, mode-aware payload byte count feeding straight into the
+  // compatibility request below — same idea as EmbedPage's payloadBytes.
+  const payloadBytes = useMemo(() => {
+    if (mode === 'text') return utf8Bytes;
+    if (mode === 'file') return uploadedFile?.size || 0;
+    if (mode === 'image') return secretImage?.size || 0;
+    return 0;
+  }, [mode, utf8Bytes, uploadedFile, secretImage]);
+
+  const changeMode = (nextMode: CompatMode) => {
+    setMode(nextMode);
+    setResult(null);
+    setError(null);
+  };
+
   const updateText = (value: string) => {
     setText(value);
     setPayloadText(value);
+    setResult(null);
+    setError(null);
+  };
+
+  const handleGeneralFile = async (file: File | undefined) => {
+    if (!file) return;
+    const dataUrl = await readFileAsDataUrl(file);
+    setUploadedFile({
+      name: file.name,
+      size: file.size,
+      type: file.type || 'application/octet-stream',
+      dataUrl,
+    });
+    setResult(null);
+    setError(null);
+  };
+
+  const handleSecretImage = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('The secret-image payload must be an image file.');
+      return;
+    }
+    const dataUrl = await readFileAsDataUrl(file);
+    setSecretImage({
+      name: file.name,
+      size: file.size,
+      type: file.type || 'image/png',
+      dataUrl,
+    });
     setResult(null);
     setError(null);
   };
@@ -81,8 +142,14 @@ export const CompatibilityPage: React.FC = () => {
       return;
     }
 
-    if (utf8Bytes <= 0) {
-      setError('Please enter a secret message.');
+    if (payloadBytes <= 0) {
+      setError(
+        mode === 'text'
+          ? 'Please enter a secret message.'
+          : mode === 'file'
+          ? 'Please select a file payload.'
+          : 'Please select a secret image.'
+      );
       return;
     }
 
@@ -91,10 +158,21 @@ export const CompatibilityPage: React.FC = () => {
     setResult(null);
 
     try {
+      const rawPayload =
+        mode === 'text' ? text : mode === 'file' ? uploadedFile!.dataUrl : secretImage!.dataUrl;
+
+      const payloadFilename =
+        mode === 'file' ? uploadedFile!.name : mode === 'image' ? secretImage!.name : undefined;
+
+      const payloadMimeType =
+        mode === 'file' ? uploadedFile!.type : mode === 'image' ? secretImage!.type : undefined;
+
       const response = await assessRealCompatibility({
         coverDataUrl,
-        payloadKind: 'text',
-        rawPayload: text,
+        payloadKind: mode,
+        rawPayload,
+        payloadFilename,
+        payloadMimeType,
       });
 
       setResult(response);
@@ -110,8 +188,20 @@ export const CompatibilityPage: React.FC = () => {
   };
 
   const proceedToEmbed = () => {
-    setPayloadKind('text');
-    setPayloadText(text);
+    setPayloadKind(mode);
+    if (mode === 'text') {
+      setPayloadText(text);
+    }
+    // NOTE: EmbedPage re-derives its own uploaded file/secret-image state
+    // independently (it doesn't currently read a shared "uploaded file" or
+    // "secret image" value out of DemoContext — only `payloadText` and
+    // `coverDataUrl`/`coverMeta` are shared). That means when navigating
+    // over from here in "file" or "image" mode, the user will need to
+    // re-select the same file once on the Embed page. If you want the
+    // exact same file to carry over automatically, DemoContext needs a
+    // shared field (e.g. setSecretPayload(dataUrl, meta)) — check
+    // DemoContext.tsx for whether something like that already exists
+    // before adding one, to avoid duplicating state.
     navigate('/embed');
   };
 
@@ -145,6 +235,47 @@ export const CompatibilityPage: React.FC = () => {
         </div>
       )}
 
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
+        <button
+          type="button"
+          onClick={() => changeMode('text')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl border ${
+            mode === 'text'
+              ? 'bg-brand-600 text-white border-brand-500'
+              : 'bg-slate-900 text-slate-400 border-slate-800'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          Text
+        </button>
+
+        <button
+          type="button"
+          onClick={() => changeMode('file')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl border ${
+            mode === 'file'
+              ? 'bg-brand-600 text-white border-brand-500'
+              : 'bg-slate-900 text-slate-400 border-slate-800'
+          }`}
+        >
+          <FileCode className="w-4 h-4" />
+          File
+        </button>
+
+        <button
+          type="button"
+          onClick={() => changeMode('image')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl border ${
+            mode === 'image'
+              ? 'bg-brand-600 text-white border-brand-500'
+              : 'bg-slate-900 text-slate-400 border-slate-800'
+          }`}
+        >
+          <ImageIcon className="w-4 h-4" />
+          Exact Secret Image
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-7 flex flex-col gap-6">
           <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800">
@@ -171,44 +302,89 @@ export const CompatibilityPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-3">
               <FileText className="w-4 h-4 text-indigo-400" />
               <h2 className="text-base font-semibold text-white">
-                2. Enter the Secret Text
+                2. Secret Payload
               </h2>
             </div>
 
-            <textarea
-              value={text}
-              onChange={(event) => updateText(event.target.value)}
-              placeholder="Enter the text whose cover compatibility should be checked..."
-              rows={7}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 font-mono focus:border-brand-500"
-            />
+            {mode === 'text' && (
+              <>
+                <textarea
+                  value={text}
+                  onChange={(event) => updateText(event.target.value)}
+                  placeholder="Enter the text whose cover compatibility should be checked..."
+                  rows={7}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 font-mono focus:border-brand-500"
+                />
 
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <p className="text-[10px] uppercase text-slate-500">
-                  Characters
-                </p>
-                <p className="font-mono font-semibold text-white">
-                  {characterCount.toLocaleString()}
-                </p>
-              </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    <p className="text-[10px] uppercase text-slate-500">
+                      Characters
+                    </p>
+                    <p className="font-mono font-semibold text-white">
+                      {characterCount.toLocaleString()}
+                    </p>
+                  </div>
 
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
-                <p className="text-[10px] uppercase text-slate-500">
-                  UTF-8 bytes
-                </p>
-                <p className="font-mono font-semibold text-white">
-                  {formatBytes(utf8Bytes)}
-                </p>
+                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800">
+                    <p className="text-[10px] uppercase text-slate-500">
+                      UTF-8 bytes
+                    </p>
+                    <p className="font-mono font-semibold text-white">
+                      {formatBytes(utf8Bytes)}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {mode === 'file' && (
+              <div>
+                <input
+                  type="file"
+                  onChange={(event) => handleGeneralFile(event.target.files?.[0])}
+                  className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-white"
+                />
+
+                {uploadedFile && (
+                  <p className="text-xs text-slate-400 mt-3">
+                    {uploadedFile.name} — {formatBytes(uploadedFile.size)}
+                  </p>
+                )}
               </div>
-            </div>
+            )}
+
+            {mode === 'image' && (
+              <div className="flex flex-col gap-3">
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/bmp"
+                  onChange={(event) => handleSecretImage(event.target.files?.[0])}
+                  className="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-600 file:px-4 file:py-2 file:text-white"
+                />
+
+                {secretImage && (
+                  <div className="flex items-center gap-4 p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <img
+                      src={secretImage.dataUrl}
+                      alt="Secret payload preview"
+                      className="w-20 h-20 object-contain rounded-lg border border-slate-800"
+                    />
+                    <div className="text-xs text-slate-400">
+                      <p className="text-white font-semibold">{secretImage.name}</p>
+                      <p>{formatBytes(secretImage.size)}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <button
               type="button"
-              disabled={isAnalyzing || !coverDataUrl || utf8Bytes === 0}
+              disabled={isAnalyzing || !coverDataUrl || payloadBytes === 0}
               onClick={runCompatibility}
               className={`w-full mt-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${
-                isAnalyzing || !coverDataUrl || utf8Bytes === 0
+                isAnalyzing || !coverDataUrl || payloadBytes === 0
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white hover:from-brand-500 hover:to-indigo-500'
               }`}

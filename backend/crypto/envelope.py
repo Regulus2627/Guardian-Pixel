@@ -22,6 +22,7 @@ ENVELOPE_VERSION = 1
 
 PAYLOAD_TYPE_TEXT = 1
 PAYLOAD_TYPE_FILE = 2
+PAYLOAD_TYPE_IMAGE = 3
 
 FLAG_COMPRESSED = 0x01
 
@@ -61,8 +62,11 @@ def _payload_type_to_code(
     if payload_type == "file":
         return PAYLOAD_TYPE_FILE
 
+    if payload_type == "image":
+        return PAYLOAD_TYPE_IMAGE
+
     raise EnvelopeError(
-        "payload_type must be text or file."
+        "payload_type must be text, file or image."
     )
 
 
@@ -75,10 +79,12 @@ def _payload_code_to_type(
     if payload_code == PAYLOAD_TYPE_FILE:
         return "file"
 
+    if payload_code == PAYLOAD_TYPE_IMAGE:
+        return "image"
+
     raise EnvelopeError(
         f"Unsupported payload type code: {payload_code}"
     )
-
 
 def _validate_filename(
     filename: str,
@@ -168,6 +174,11 @@ def build_envelope(
     if payload_type == "text" and filename:
         raise EnvelopeError(
             "Text payloads must not include a filename."
+        )
+
+    if payload_type in ("file", "image") and not filename:
+        raise EnvelopeError(
+            "File and image payloads require a filename."
         )
 
     if payload_type == "file" and not filename:
@@ -340,9 +351,9 @@ def parse_envelope(
             "Text envelope must not contain a filename."
         )
 
-    if payload_type == "file" and not filename:
+    if payload_type in ("file", "image") and not filename:
         raise EnvelopeError(
-            "File envelope requires a filename."
+            "File and image envelope requires a filename."
         )
 
     compressed = bool(

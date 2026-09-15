@@ -6,6 +6,12 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: true
-  }
+    host: true,
+    watch: {
+      ignored: ['**/venv/**'],
+    },
+  },
+  optimizeDeps: {
+    entries: ['index.html'], // restricts dependency scanning to just this file
+  },
 });

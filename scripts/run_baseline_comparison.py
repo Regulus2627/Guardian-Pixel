@@ -18,6 +18,7 @@ from backend.compatibility.payload import generate_text_payload
 from backend.core.bitstream import bytes_to_bits
 from backend.core.protocol import serialize_bootstrap
 from backend.metrics.image_quality import calculate_image_quality
+from backend.metrics.steganalysis import compute_steganalysis_metrics
 from backend.stego.baselines.canny_edge import embed_canny_lsb, extract_canny_lsb
 from backend.stego.baselines.keyed_random_matching import (
     embed_keyed_random_matching,
@@ -78,6 +79,66 @@ def calculate_ber(
     return float(
         np.mean(expected != extracted)
     )
+
+
+def calculate_steganalysis_fields(
+    cover: np.ndarray,
+    stego: np.ndarray,
+    suitability_map: np.ndarray,
+    rs_channel: int,
+) -> dict[str, float]:
+    """Return flattened steganalysis values suitable for CSV and JSON."""
+
+    result = compute_steganalysis_metrics(
+        cover=cover,
+        stego=stego,
+        suitability_map=suitability_map,
+        smooth_quantile=0.25,
+        variance_window=11,
+        rs_channel=rs_channel,
+    )
+
+    return {
+        "histogram_l1_mean": result.histogram_l1.mean,
+        "histogram_chi_square_mean": result.histogram_chi_square.mean,
+        "cover_lsb_chi_square_statistic": (
+            result.cover_lsb_chi_square.statistic
+        ),
+        "stego_lsb_chi_square_statistic": (
+            result.stego_lsb_chi_square.statistic
+        ),
+        "lsb_chi_square_statistic_change": (
+            result.lsb_chi_square_statistic_change
+        ),
+        "absolute_lsb_chi_square_statistic_change": abs(
+            result.lsb_chi_square_statistic_change
+        ),
+        "cover_rs_combined_imbalance": result.cover_rs.combined_imbalance,
+        "stego_rs_combined_imbalance": result.stego_rs.combined_imbalance,
+        "rs_combined_imbalance_change": (
+            result.rs_combined_imbalance_change
+        ),
+        "absolute_rs_combined_imbalance_change": abs(
+            result.rs_combined_imbalance_change
+        ),
+        "smooth_pixel_fraction": result.smooth_pixel_fraction,
+        "smooth_region_change_ratio": result.smooth_region_change_ratio,
+        "mean_modified_position_suitability": (
+            result.mean_modified_position_suitability
+            if result.mean_modified_position_suitability is not None
+            else ""
+        ),
+        "mean_image_suitability": (
+            result.mean_image_suitability
+            if result.mean_image_suitability is not None
+            else ""
+        ),
+        "suitability_gain": (
+            result.suitability_gain
+            if result.suitability_gain is not None
+            else ""
+        ),
+    }
 
 
 def write_rows(rows: list[dict], output_path: Path) -> None:
@@ -215,6 +276,11 @@ def main() -> None:
         reserved_position_count=0,
     )
 
+    # Use one frozen GuardianPixel fusion map to assess the modified positions
+    # of every method on this cover. This keeps the location-quality comparison
+    # consistent and avoids repeating HED inference for each baseline.
+    suitability_map = cover_analysis.feature_maps.fused_heatmap
+
     proposed_start = perf_counter()
     proposed = embed_secret(
         rgb=cover,
@@ -268,6 +334,12 @@ def main() -> None:
         payload_bits=len(proposed.encrypted_packet_bytes) * 8,
         total_embedded_bits=proposed.total_embedded_bits,
     )
+    proposed_steganalysis = calculate_steganalysis_fields(
+        cover=cover,
+        stego=proposed.stego_image,
+        suitability_map=suitability_map,
+        rs_channel=arguments.channel,
+    )
 
     Image.fromarray(proposed.stego_image).save(
         output_directory / "guardianpixel_stego.png"
@@ -300,6 +372,7 @@ def main() -> None:
             "maximum_change": proposed_metrics.maximum_absolute_change,
             "embedding_seconds": proposed_embed_seconds,
             "extraction_seconds": proposed_extract_seconds,
+            **proposed_steganalysis,
             "failure_reason": "",
         }
     )
@@ -327,6 +400,12 @@ def main() -> None:
                 stego=stego,
                 payload_bits=int(comparison_bits.size),
                 total_embedded_bits=int(comparison_bits.size),
+            )
+            steganalysis = calculate_steganalysis_fields(
+                cover=cover,
+                stego=stego,
+                suitability_map=suitability_map,
+                rs_channel=arguments.channel,
             )
 
             Image.fromarray(stego).save(
@@ -360,6 +439,7 @@ def main() -> None:
                     "maximum_change": metrics.maximum_absolute_change,
                     "embedding_seconds": embed_seconds,
                     "extraction_seconds": extract_seconds,
+                    **steganalysis,
                     "failure_reason": "" if extraction_success else "BIT_ERRORS",
                 }
             )

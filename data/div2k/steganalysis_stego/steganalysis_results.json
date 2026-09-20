@@ -1,0 +1,1182 @@
+[
+  {
+    "histogram_l1": {
+      "red": 0.00060226155358898,
+      "green": 0.0005140551795939656,
+      "blue": 0.0005480363236740111,
+      "mean": 0.0005547843522856522
+    },
+    "histogram_chi_square": {
+      "red": 1.542303483688654e-07,
+      "green": 1.1343985096542902e-07,
+      "blue": 1.317618163527511e-07,
+      "mean": 1.3314400522901517e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 2222.41398440649,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 2216.9980852405124,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -5.415899165977407,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 390766,
+      "singular_positive": 300794,
+      "unusable_positive": 0,
+      "regular_negative": 391100,
+      "singular_negative": 300350,
+      "unusable_negative": 110,
+      "positive_imbalance": 0.13010006362426976,
+      "negative_imbalance": 0.13122505639423912,
+      "combined_imbalance": 0.13066256000925444
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 390788,
+      "singular_positive": 300772,
+      "unusable_positive": 0,
+      "regular_negative": 391058,
+      "singular_negative": 300392,
+      "unusable_negative": 110,
+      "positive_imbalance": 0.13016368789403668,
+      "negative_imbalance": 0.13110359187922957,
+      "combined_imbalance": 0.13063363988663312
+    },
+    "rs_combined_imbalance_change": -2.89201226213176e-05,
+    "modified_pixel_count": 24122,
+    "changed_pixel_ratio": 0.008720139973393487,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03959041538844209,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0801.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005755104401642695,
+      "green": 0.0005711724217710705,
+      "blue": 0.0005335762623633749,
+      "mean": 0.0005600863747662383
+    },
+    "histogram_chi_square": {
+      "red": 1.7171073524966297e-07,
+      "green": 1.5276027373759765e-07,
+      "blue": 1.3172616643558825e-06,
+      "mean": 5.472442244477143e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 98211.0022519209,
+      "degrees_of_freedom": 121,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 98129.4946846551,
+      "degrees_of_freedom": 121,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -81.50756726579857,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 414856,
+      "singular_positive": 276704,
+      "unusable_positive": 0,
+      "regular_negative": 416008,
+      "singular_negative": 275549,
+      "unusable_negative": 3,
+      "positive_imbalance": 0.19976863901902944,
+      "negative_imbalance": 0.2031045751633987,
+      "combined_imbalance": 0.20143660709121408
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 414867,
+      "singular_positive": 276693,
+      "unusable_positive": 0,
+      "regular_negative": 415965,
+      "singular_negative": 275592,
+      "unusable_negative": 3,
+      "positive_imbalance": 0.1998004511539129,
+      "negative_imbalance": 0.20298021863612703,
+      "combined_imbalance": 0.20139033489501995
+    },
+    "rs_combined_imbalance_change": -4.6272196194130366e-05,
+    "modified_pixel_count": 24812,
+    "changed_pixel_ratio": 0.00896957603100237,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.040746413025955185,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0802.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005565767973856194,
+      "green": 0.0004946640114379123,
+      "blue": 0.0004895578022875787,
+      "mean": 0.0005135995370370368
+    },
+    "histogram_chi_square": {
+      "red": 1.6754054191446514e-07,
+      "green": 1.8084890104739506e-07,
+      "blue": 4.375084774387233e-07,
+      "mean": 2.619659734668612e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 12525.484021150318,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 12496.446884461147,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -29.03713668917044,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 558074,
+      "singular_positive": 225286,
+      "unusable_positive": 0,
+      "regular_negative": 558671,
+      "singular_negative": 224672,
+      "unusable_negative": 17,
+      "positive_imbalance": 0.42482128267973857,
+      "negative_imbalance": 0.4263671875,
+      "combined_imbalance": 0.42559423508986927
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 558008,
+      "singular_positive": 225352,
+      "unusable_positive": 0,
+      "regular_negative": 558570,
+      "singular_negative": 224773,
+      "unusable_negative": 17,
+      "positive_imbalance": 0.42465277777777777,
+      "negative_imbalance": 0.4261093239379085,
+      "combined_imbalance": 0.42538105085784317
+    },
+    "rs_combined_imbalance_change": -0.00021318423202609793,
+    "modified_pixel_count": 24348,
+    "changed_pixel_ratio": 0.007770373774509804,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03807294233612617,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0803.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0006732026143790909,
+      "green": 0.0005849673202614318,
+      "blue": 0.0006715686274509875,
+      "mean": 0.0006432461873638368
+    },
+    "histogram_chi_square": {
+      "red": 2.218004110649346e-07,
+      "green": 1.6905086259166458e-07,
+      "blue": 2.3224497022607187e-07,
+      "mean": 2.0769874796089034e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 24548.6796232793,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 24488.021945955068,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -60.65767732423046,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 612000,
+      "regular_positive": 365548,
+      "singular_positive": 246452,
+      "unusable_positive": 0,
+      "regular_negative": 364722,
+      "singular_negative": 247267,
+      "unusable_negative": 11,
+      "positive_imbalance": 0.1946013071895425,
+      "negative_imbalance": 0.19191993464052287,
+      "combined_imbalance": 0.19326062091503268
+    },
+    "stego_rs": {
+      "group_count": 612000,
+      "regular_positive": 365454,
+      "singular_positive": 246546,
+      "unusable_positive": 0,
+      "regular_negative": 364766,
+      "singular_negative": 247224,
+      "unusable_negative": 10,
+      "positive_imbalance": 0.1942941176470588,
+      "negative_imbalance": 0.19206209150326797,
+      "combined_imbalance": 0.19317810457516338
+    },
+    "rs_combined_imbalance_change": -8.251633986930407e-05,
+    "modified_pixel_count": 24355,
+    "changed_pixel_ratio": 0.009948937908496732,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.041469924040238144,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0804.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005527471405228732,
+      "green": 0.0005821078431372574,
+      "blue": 0.0005750868055555552,
+      "mean": 0.0005699805964052286
+    },
+    "histogram_chi_square": {
+      "red": 1.792857906953493e-07,
+      "green": 1.739872504963061e-07,
+      "blue": 1.414145660683061e-07,
+      "mean": 1.6489586908665385e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 257220.0620136197,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 256422.43073741184,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -797.6312762078596,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 436464,
+      "singular_positive": 346896,
+      "unusable_positive": 0,
+      "regular_negative": 405434,
+      "singular_negative": 340008,
+      "unusable_negative": 37918,
+      "positive_imbalance": 0.11433823529411764,
+      "negative_imbalance": 0.08351970996732026,
+      "combined_imbalance": 0.09892897263071895
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 436415,
+      "singular_positive": 346945,
+      "unusable_positive": 0,
+      "regular_negative": 405483,
+      "singular_negative": 339986,
+      "unusable_negative": 37891,
+      "positive_imbalance": 0.11421313316993464,
+      "negative_imbalance": 0.08361034517973856,
+      "combined_imbalance": 0.0989117391748366
+    },
+    "rs_combined_imbalance_change": -1.7233455882351145e-05,
+    "modified_pixel_count": 23897,
+    "changed_pixel_ratio": 0.007626442504084967,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.035736703351885175,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0805.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005928625137370571,
+      "green": 0.0005603273757880769,
+      "blue": 0.0005661114003123324,
+      "mean": 0.0005731004299458221
+    },
+    "histogram_chi_square": {
+      "red": 5.839156128757646e-07,
+      "green": 1.6769816726055148e-07,
+      "blue": 1.7835737497183125e-07,
+      "mean": 3.099903850360491e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 22300.8361054066,
+      "degrees_of_freedom": 127,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 22235.06482352134,
+      "degrees_of_freedom": 127,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -65.77128188525967,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 451945,
+      "singular_positive": 239615,
+      "unusable_positive": 0,
+      "regular_negative": 451118,
+      "singular_negative": 239601,
+      "unusable_negative": 841,
+      "positive_imbalance": 0.30703048180924286,
+      "negative_imbalance": 0.3058548788246862,
+      "combined_imbalance": 0.30644268031696453
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 451911,
+      "singular_positive": 239649,
+      "unusable_positive": 0,
+      "regular_negative": 451113,
+      "singular_negative": 239606,
+      "unusable_negative": 841,
+      "positive_imbalance": 0.3069321533923304,
+      "negative_imbalance": 0.30584041876337553,
+      "combined_imbalance": 0.30638628607785295
+    },
+    "rs_combined_imbalance_change": -5.6394239111579036e-05,
+    "modified_pixel_count": 23420,
+    "changed_pixel_ratio": 0.008466365897391404,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.031127241673783092,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0806.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0007752746488666315,
+      "green": 0.0008369837296620716,
+      "blue": 0.00085349742733974,
+      "mean": 0.0008219186019561477
+    },
+    "histogram_chi_square": {
+      "red": 6.281286284861235e-07,
+      "green": 6.248521232426284e-07,
+      "blue": 6.622905622110127e-07,
+      "mean": 6.384237713132548e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 17540.96229390236,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 17067.640857476075,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -473.3214364262858,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 575280,
+      "regular_positive": 304479,
+      "singular_positive": 270801,
+      "unusable_positive": 0,
+      "regular_negative": 301751,
+      "singular_negative": 266121,
+      "unusable_negative": 7408,
+      "positive_imbalance": 0.05854192740926158,
+      "negative_imbalance": 0.061935057711027676,
+      "combined_imbalance": 0.06023849256014463
+    },
+    "stego_rs": {
+      "group_count": 575280,
+      "regular_positive": 304529,
+      "singular_positive": 270751,
+      "unusable_positive": 0,
+      "regular_negative": 301741,
+      "singular_negative": 266168,
+      "unusable_negative": 7371,
+      "positive_imbalance": 0.05871575580586845,
+      "negative_imbalance": 0.061835975524961756,
+      "combined_imbalance": 0.0602758656654151
+    },
+    "rs_combined_imbalance_change": 3.737310527047316e-05,
+    "modified_pixel_count": 23854,
+    "changed_pixel_ratio": 0.010366256431650674,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.035214219837343845,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0807.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0007475851697611179,
+      "green": 0.0006969749551738195,
+      "blue": 0.0008328995314940067,
+      "mean": 0.0007591532188096481
+    },
+    "histogram_chi_square": {
+      "red": 1.2138517708289125e-06,
+      "green": 1.6264656933426335e-06,
+      "blue": 1.0207889287880753e-06,
+      "mean": 1.2870354643198738e-06
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 206542.24218365122,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 204932.17059949692,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -1610.0715841542988,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 462572,
+      "singular_positive": 228988,
+      "unusable_positive": 0,
+      "regular_negative": 457506,
+      "singular_negative": 228032,
+      "unusable_negative": 6022,
+      "positive_imbalance": 0.33776389611891955,
+      "negative_imbalance": 0.3318208109202383,
+      "combined_imbalance": 0.3347923535195789
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 462496,
+      "singular_positive": 229064,
+      "unusable_positive": 0,
+      "regular_negative": 457519,
+      "singular_negative": 228060,
+      "unusable_negative": 5981,
+      "positive_imbalance": 0.3375441031869975,
+      "negative_imbalance": 0.3317991208282723,
+      "combined_imbalance": 0.3346716120076349
+    },
+    "rs_combined_imbalance_change": -0.0001207415119440225,
+    "modified_pixel_count": 23453,
+    "changed_pixel_ratio": 0.0084782954479727,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03057178186159553,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0808.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005082711550697006,
+      "green": 0.0005408062930186795,
+      "blue": 0.0005494823298050824,
+      "mean": 0.0005328532592978209
+    },
+    "histogram_chi_square": {
+      "red": 1.4824304210172027e-07,
+      "green": 2.7024211921992694e-07,
+      "blue": 3.604750336978024e-07,
+      "mean": 2.596533983398165e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 1792.4767784912178,
+      "degrees_of_freedom": 128,
+      "p_value": 3.2038656590183877e-291
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 1796.0258729986203,
+      "degrees_of_freedom": 128,
+      "p_value": 6.152529271725815e-292
+    },
+    "lsb_chi_square_statistic_change": 3.549094507402515,
+    "lsb_chi_square_p_value_change": -2.5886127318458063e-291,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 397811,
+      "singular_positive": 293749,
+      "unusable_positive": 0,
+      "regular_negative": 398053,
+      "singular_negative": 293507,
+      "unusable_negative": 0,
+      "positive_imbalance": 0.15047429001098964,
+      "negative_imbalance": 0.1511741569784256,
+      "combined_imbalance": 0.15082422349470762
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 397791,
+      "singular_positive": 293769,
+      "unusable_positive": 0,
+      "regular_negative": 398086,
+      "singular_negative": 293474,
+      "unusable_negative": 0,
+      "positive_imbalance": 0.150416449765747,
+      "negative_imbalance": 0.15126959338307594,
+      "combined_imbalance": 0.15084302157441148
+    },
+    "rs_combined_imbalance_change": 1.879807970386893e-05,
+    "modified_pixel_count": 23616,
+    "changed_pixel_ratio": 0.008537220197813639,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.036797086720867206,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0809.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0004793453839869287,
+      "green": 0.0004487081290849757,
+      "blue": 0.0004895578022875912,
+      "mean": 0.0004725371051198318
+    },
+    "histogram_chi_square": {
+      "red": 1.1035651535736889e-07,
+      "green": 9.991699147641014e-08,
+      "blue": 1.2670068700514426e-07,
+      "mean": 1.123247312796411e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 1831.674663999814,
+      "degrees_of_freedom": 124,
+      "p_value": 1.7873652279770913e-301
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 1830.41373341872,
+      "degrees_of_freedom": 124,
+      "p_value": 3.219576632472002e-301
+    },
+    "lsb_chi_square_statistic_change": -1.2609305810938167,
+    "lsb_chi_square_p_value_change": 1.4322114044949106e-301,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 454928,
+      "singular_positive": 328432,
+      "unusable_positive": 0,
+      "regular_negative": 453507,
+      "singular_negative": 329718,
+      "unusable_negative": 135,
+      "positive_imbalance": 0.16147875816993465,
+      "negative_imbalance": 0.15802313112745098,
+      "combined_imbalance": 0.15975094464869283
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 454876,
+      "singular_positive": 328484,
+      "unusable_positive": 0,
+      "regular_negative": 453531,
+      "singular_negative": 329694,
+      "unusable_negative": 135,
+      "positive_imbalance": 0.16134599673202615,
+      "negative_imbalance": 0.1580844056372549,
+      "combined_imbalance": 0.15971520118464053
+    },
+    "rs_combined_imbalance_change": -3.574346405230133e-05,
+    "modified_pixel_count": 24198,
+    "changed_pixel_ratio": 0.0077225030637254905,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03847425407058434,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0810.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005386372838220741,
+      "green": 0.0005292382439701582,
+      "blue": 0.0005668344033778827,
+      "mean": 0.0005449033103900384
+    },
+    "histogram_chi_square": {
+      "red": 2.952696492422215e-07,
+      "green": 1.7019878861451703e-07,
+      "blue": 2.3023081854942286e-07,
+      "mean": 2.3189975213538713e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 12586.60561926908,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 12651.079321519306,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": 64.47370225022678,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 390446,
+      "singular_positive": 301114,
+      "unusable_positive": 0,
+      "regular_negative": 390245,
+      "singular_negative": 301302,
+      "unusable_negative": 13,
+      "positive_imbalance": 0.12917461970038752,
+      "negative_imbalance": 0.12861212331540287,
+      "combined_imbalance": 0.1288933715078952
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 390402,
+      "singular_positive": 301158,
+      "unusable_positive": 0,
+      "regular_negative": 390277,
+      "singular_negative": 301270,
+      "unusable_negative": 13,
+      "positive_imbalance": 0.1290473711608537,
+      "negative_imbalance": 0.12870466770779107,
+      "combined_imbalance": 0.1288760194343224
+    },
+    "rs_combined_imbalance_change": -1.7352073572812765e-05,
+    "modified_pixel_count": 23852,
+    "changed_pixel_ratio": 0.008622534559546532,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03504947174241154,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0811.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005106209150326807,
+      "green": 0.00048445159313725654,
+      "blue": 0.0005176419526143751,
+      "mean": 0.0005042381535947708
+    },
+    "histogram_chi_square": {
+      "red": 1.2815120632072611e-07,
+      "green": 1.5489340574036876e-07,
+      "blue": 1.29753585080168e-07,
+      "mean": 1.3759939904708763e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 6380.050028695043,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 6360.355620075403,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -19.694408619639944,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 468000,
+      "singular_positive": 315360,
+      "unusable_positive": 0,
+      "regular_negative": 468417,
+      "singular_negative": 314930,
+      "unusable_negative": 13,
+      "positive_imbalance": 0.1948529411764706,
+      "negative_imbalance": 0.1959341809640523,
+      "combined_imbalance": 0.19539356107026146
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 467983,
+      "singular_positive": 315377,
+      "unusable_positive": 0,
+      "regular_negative": 468345,
+      "singular_negative": 315002,
+      "unusable_negative": 13,
+      "positive_imbalance": 0.1948095383986928,
+      "negative_imbalance": 0.19575035743464053,
+      "combined_imbalance": 0.19527994791666667
+    },
+    "rs_combined_imbalance_change": -0.00011361315359478819,
+    "modified_pixel_count": 24199,
+    "changed_pixel_ratio": 0.007722822201797386,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03892722839786768,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0812.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0006087270973963461,
+      "green": 0.0006120754312654074,
+      "blue": 0.0006167630986820985,
+      "mean": 0.000612521875781284
+    },
+    "histogram_chi_square": {
+      "red": 1.67654577365598e-07,
+      "green": 1.8786214746120213e-07,
+      "blue": 2.3168049179747909e-07,
+      "mean": 1.957324055414264e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 465419.0521029145,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 464503.876953229,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -915.1751496854704,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 746640,
+      "regular_positive": 494811,
+      "singular_positive": 251829,
+      "unusable_positive": 0,
+      "regular_negative": 486013,
+      "singular_negative": 247079,
+      "unusable_negative": 13548,
+      "positive_imbalance": 0.32543394406943105,
+      "negative_imbalance": 0.32001232186863815,
+      "combined_imbalance": 0.3227231329690346
+    },
+    "stego_rs": {
+      "group_count": 746640,
+      "regular_positive": 494693,
+      "singular_positive": 251947,
+      "unusable_positive": 0,
+      "regular_negative": 485963,
+      "singular_negative": 247135,
+      "unusable_negative": 13542,
+      "positive_imbalance": 0.3251178613521912,
+      "negative_imbalance": 0.3198703525125897,
+      "combined_imbalance": 0.32249410693239045
+    },
+    "rs_combined_imbalance_change": -0.00022902603664415322,
+    "modified_pixel_count": 24566,
+    "changed_pixel_ratio": 0.008225516982749384,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.041317267768460474,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0813.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.000535022268494424,
+      "green": 0.0005024871305454515,
+      "blue": 0.0005617733819191325,
+      "mean": 0.0005330942603196694
+    },
+    "histogram_chi_square": {
+      "red": 6.181829629984546e-07,
+      "green": 1.590867989408907e-06,
+      "blue": 8.716739830241358e-07,
+      "mean": 1.0269083118104992e-06
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 54417.543465288465,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 54249.65659831553,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -167.8868669729345,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 515676,
+      "singular_positive": 175884,
+      "unusable_positive": 0,
+      "regular_negative": 517456,
+      "singular_negative": 174025,
+      "unusable_negative": 79,
+      "positive_imbalance": 0.49134131528717684,
+      "negative_imbalance": 0.496603331598126,
+      "combined_imbalance": 0.4939723234426514
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 515564,
+      "singular_positive": 175996,
+      "unusable_positive": 0,
+      "regular_negative": 517463,
+      "singular_negative": 174019,
+      "unusable_negative": 78,
+      "positive_imbalance": 0.49101740991381804,
+      "negative_imbalance": 0.4966221296778298,
+      "combined_imbalance": 0.4938197697958239
+    },
+    "rs_combined_imbalance_change": -0.00015255364682748018,
+    "modified_pixel_count": 23342,
+    "changed_pixel_ratio": 0.008438168777835618,
+    "smooth_pixel_fraction": 0.2500010845045983,
+    "smooth_region_change_ratio": 0.031873875417701994,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0814.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005668344033778756,
+      "green": 0.0005393602868876152,
+      "blue": 0.0005342992654288855,
+      "mean": 0.0005468313185647921
+    },
+    "histogram_chi_square": {
+      "red": 2.1425853672051343e-07,
+      "green": 1.6470558491184443e-07,
+      "blue": 2.269197381990731e-07,
+      "mean": 2.01961286610477e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 5736.488743807144,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 5796.961148765922,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": 60.4724049587785,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 404852,
+      "singular_positive": 286708,
+      "unusable_positive": 0,
+      "regular_negative": 403618,
+      "singular_negative": 287576,
+      "unusable_negative": 366,
+      "positive_imbalance": 0.170836948348661,
+      "negative_imbalance": 0.16779744346116027,
+      "combined_imbalance": 0.16931719590491062
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 404825,
+      "singular_positive": 286735,
+      "unusable_positive": 0,
+      "regular_negative": 403643,
+      "singular_negative": 287551,
+      "unusable_negative": 366,
+      "positive_imbalance": 0.17075886401758344,
+      "negative_imbalance": 0.16786974376771358,
+      "combined_imbalance": 0.1693143038926485
+    },
+    "rs_combined_imbalance_change": -2.892012262112331e-06,
+    "modified_pixel_count": 23663,
+    "changed_pixel_ratio": 0.008554210769853665,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.034230655453661836,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0815.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005935855168025893,
+      "green": 0.0006535947712418315,
+      "blue": 0.0006333506854069135,
+      "mean": 0.0006268436578171114
+    },
+    "histogram_chi_square": {
+      "red": 4.317543036141575e-07,
+      "green": 3.876868137208254e-07,
+      "blue": 3.39377494645033e-07,
+      "mean": 3.8627287066000533e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 137522.27650395234,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 136950.88220859203,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -571.3942953603109,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 420057,
+      "singular_positive": 271503,
+      "unusable_positive": 0,
+      "regular_negative": 406694,
+      "singular_negative": 271093,
+      "unusable_negative": 13773,
+      "positive_imbalance": 0.21480999479437793,
+      "negative_imbalance": 0.19607987737868007,
+      "combined_imbalance": 0.205444936086529
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 420058,
+      "singular_positive": 271502,
+      "unusable_positive": 0,
+      "regular_negative": 406649,
+      "singular_negative": 271181,
+      "unusable_negative": 13730,
+      "positive_imbalance": 0.21481288680664007,
+      "negative_imbalance": 0.1958875585632483,
+      "combined_imbalance": 0.20535022268494418
+    },
+    "rs_combined_imbalance_change": -9.471340158481723e-05,
+    "modified_pixel_count": 23912,
+    "changed_pixel_ratio": 0.008644224651512522,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.038892606222817,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0816.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.00046466503267973214,
+      "green": 0.00045445261437907945,
+      "blue": 0.0005495557598039209,
+      "mean": 0.0004895578022875775
+    },
+    "histogram_chi_square": {
+      "red": 1.6293900960129964e-07,
+      "green": 2.96263921592401e-07,
+      "blue": 2.396325615727491e-07,
+      "mean": 2.3294516425548323e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 36035.04958395369,
+      "degrees_of_freedom": 126,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 35990.85683979149,
+      "degrees_of_freedom": 126,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -44.192744162195595,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 471533,
+      "singular_positive": 311827,
+      "unusable_positive": 0,
+      "regular_negative": 470550,
+      "singular_negative": 312805,
+      "unusable_negative": 5,
+      "positive_imbalance": 0.20387305964052288,
+      "negative_imbalance": 0.20136974060457516,
+      "combined_imbalance": 0.20262140012254903
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 471541,
+      "singular_positive": 311819,
+      "unusable_positive": 0,
+      "regular_negative": 470496,
+      "singular_negative": 312859,
+      "unusable_negative": 5,
+      "positive_imbalance": 0.2038934844771242,
+      "negative_imbalance": 0.20123187295751635,
+      "combined_imbalance": 0.20256267871732025
+    },
+    "rs_combined_imbalance_change": -5.872140522877878e-05,
+    "modified_pixel_count": 24174,
+    "changed_pixel_ratio": 0.00771484375,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.04037395548936874,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0817.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0005865757761437918,
+      "green": 0.0005706188725490167,
+      "blue": 0.0006133833741830061,
+      "mean": 0.0005901926742919382
+    },
+    "histogram_chi_square": {
+      "red": 1.7996826285399438e-07,
+      "green": 2.019805434597287e-07,
+      "blue": 2.1352748975066784e-07,
+      "mean": 1.984920986881303e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 95109.72941988891,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 94481.74627973378,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -627.9831401551346,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 783360,
+      "regular_positive": 547347,
+      "singular_positive": 236013,
+      "unusable_positive": 0,
+      "regular_negative": 530814,
+      "singular_negative": 232734,
+      "unusable_negative": 19812,
+      "positive_imbalance": 0.3974341299019608,
+      "negative_imbalance": 0.3805147058823529,
+      "combined_imbalance": 0.38897441789215687
+    },
+    "stego_rs": {
+      "group_count": 783360,
+      "regular_positive": 547315,
+      "singular_positive": 236045,
+      "unusable_positive": 0,
+      "regular_negative": 530756,
+      "singular_negative": 232810,
+      "unusable_negative": 19794,
+      "positive_imbalance": 0.3973524305555556,
+      "negative_imbalance": 0.380343647875817,
+      "combined_imbalance": 0.3888480392156863
+    },
+    "rs_combined_imbalance_change": -0.00012637867647058432,
+    "modified_pixel_count": 24060,
+    "changed_pixel_ratio": 0.007678462009803921,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.03736492103075644,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0818.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.0006022615535889897,
+      "green": 0.0005791254554919305,
+      "blue": 0.0006073225750477131,
+      "mean": 0.0005962365280428777
+    },
+    "histogram_chi_square": {
+      "red": 1.663230963441247e-07,
+      "green": 1.8226023926877156e-07,
+      "blue": 1.936422383484727e-07,
+      "mean": 1.80741857987123e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 20742.678995440285,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 20635.7678430418,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -106.91115239848659,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 411929,
+      "singular_positive": 279631,
+      "unusable_positive": 0,
+      "regular_negative": 411414,
+      "singular_negative": 280137,
+      "unusable_negative": 9,
+      "positive_imbalance": 0.1913037191277691,
+      "negative_imbalance": 0.18982734686795072,
+      "combined_imbalance": 0.19056553299785992
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 411946,
+      "singular_positive": 279614,
+      "unusable_positive": 0,
+      "regular_negative": 411397,
+      "singular_negative": 280156,
+      "unusable_negative": 7,
+      "positive_imbalance": 0.19135288333622535,
+      "negative_imbalance": 0.18977529064723234,
+      "combined_imbalance": 0.19056408699172883
+    },
+    "rs_combined_imbalance_change": -1.4460061310839212e-06,
+    "modified_pixel_count": 24576,
+    "changed_pixel_ratio": 0.008884261669269478,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.0411376953125,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0819.png"
+  },
+  {
+    "histogram_l1": {
+      "red": 0.00066299381109376,
+      "green": 0.0007620452310717735,
+      "blue": 0.0008249464977731574,
+      "mean": 0.0007499951799795636
+    },
+    "histogram_chi_square": {
+      "red": 2.271863952746583e-07,
+      "green": 3.5962077637689673e-07,
+      "blue": 3.8089812330280056e-07,
+      "mean": 3.2256843165145186e-07
+    },
+    "cover_lsb_chi_square": {
+      "statistic": 126615.43464126685,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "stego_lsb_chi_square": {
+      "statistic": 125160.62083551212,
+      "degrees_of_freedom": 128,
+      "p_value": 0.0
+    },
+    "lsb_chi_square_statistic_change": -1454.813805754733,
+    "lsb_chi_square_p_value_change": 0.0,
+    "cover_rs": {
+      "group_count": 691560,
+      "regular_positive": 419868,
+      "singular_positive": 271692,
+      "unusable_positive": 0,
+      "regular_negative": 404127,
+      "singular_negative": 265525,
+      "unusable_negative": 21908,
+      "positive_imbalance": 0.21426340447683498,
+      "negative_imbalance": 0.20041934177800913,
+      "combined_imbalance": 0.20734137312742207
+    },
+    "stego_rs": {
+      "group_count": 691560,
+      "regular_positive": 419747,
+      "singular_positive": 271813,
+      "unusable_positive": 0,
+      "regular_negative": 404201,
+      "singular_negative": 265511,
+      "unusable_negative": 21848,
+      "positive_imbalance": 0.213913470993117,
+      "negative_imbalance": 0.20054659031754293,
+      "combined_imbalance": 0.20723003065532997
+    },
+    "rs_combined_imbalance_change": -0.00011134247209210191,
+    "modified_pixel_count": 24284,
+    "changed_pixel_ratio": 0.00877870322170166,
+    "smooth_pixel_fraction": 0.25,
+    "smooth_region_change_ratio": 0.038996870367320045,
+    "mean_modified_position_suitability": null,
+    "mean_image_suitability": null,
+    "suitability_gain": null,
+    "image_id": "0820.png"
+  }
+]

@@ -98,3 +98,17 @@ backend/models/hed/*.caffemodel
 
 # Local backups
 backups/
+# GuardianPixel steganalysis local validation data
+!data/div2k/steganalysis_stego/
+!data/div2k/steganalysis_stego/steganalysis_summary.json
+
+# Keep only the steganalysis aggregate result
+!data/div2k/steganalysis_stego/steganalysis_summary.json
+
+# GuardianPixel local steganalysis validation data
+data/div2k/*
+!data/div2k/steganalysis_stego/
+!data/div2k/steganalysis_stego/steganalysis_summary.json
+
+# Local experimental datasets and generated validation data
+data/

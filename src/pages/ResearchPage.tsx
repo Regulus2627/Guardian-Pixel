@@ -1,501 +1,743 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  generateDeterministicDataset,
-  computeDatasetStatistics,
-  CATEGORIES,
-  METHODS,
-} from '../services/research/datasetService';
-import { SimulatedBadge } from '../components/common/SimulatedBadge';
-import { RealMathBadge } from '../components/common/RealMathBadge';
-import { formatBytes } from '../utils/imageProcessing';
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-  CartesianGrid,
-  BarChart,
-  Bar,
-  ScatterChart,
-  Scatter,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-} from 'recharts';
-import {
+  AlertTriangle,
   BarChart3,
   Database,
-  AlertTriangle,
-  Search,
-  RotateCcw,
+  RefreshCw,
 } from 'lucide-react';
+import { apiClient } from '../services/apiClient/client';
+
+interface MetricSummary {
+  mean: number;
+  median: number;
+  min: number;
+  max: number;
+}
+
+interface HistogramSummary {
+  red: MetricSummary;
+  green: MetricSummary;
+  blue: MetricSummary;
+  mean: MetricSummary;
+}
+
+interface SteganalysisMetrics {
+  lsb_chi_square_statistic_change: MetricSummary;
+  lsb_chi_square_p_value_change: MetricSummary;
+  rs_combined_imbalance_change: MetricSummary;
+  modified_pixel_count: MetricSummary;
+  changed_pixel_ratio: MetricSummary;
+  smooth_pixel_fraction: MetricSummary;
+  smooth_region_change_ratio: MetricSummary;
+  histogram_l1: HistogramSummary;
+}
+
+interface ValidationInfo {
+  dataset: string;
+  image_count: number;
+  image_ids: string[];
+  payload_bytes: number;
+  embedding_output: string;
+  analysis_type: string;
+  interpretation_note: string;
+}
+
+interface PerImageResult {
+  image_id?: string;
+  id?: string;
+  [key: string]: any;
+}
+
+interface SteganalysisResponse {
+  isSimulated: boolean;
+  validation: ValidationInfo;
+  metrics: SteganalysisMetrics;
+  perImage: PerImageResult[];
+
+  // Backend may return this as either a string or an array.
+  limitations?: string | string[];
+}
+
+const formatNumber = (value: number, digits = 6) => {
+  if (!Number.isFinite(value)) {
+    return '—';
+  }
+
+  return value.toFixed(digits);
+};
+
+const formatPercent = (value: number, digits = 2) => {
+  if (!Number.isFinite(value)) {
+    return '—';
+  }
+
+  return `${(value * 100).toFixed(digits)}%`;
+};
+
+const formatBytes = (bytes: number) => {
+  if (!Number.isFinite(bytes)) {
+    return '—';
+  }
+
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(2)} KB`;
+  }
+
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const getLimitations = (
+  limitations?: string | string[]
+): string[] => {
+  if (!limitations) {
+    return [];
+  }
+
+  if (Array.isArray(limitations)) {
+    return limitations;
+  }
+
+  return [limitations];
+};
 
 export const ResearchPage: React.FC = () => {
-  // Load full seeded deterministic dataset once
-  const fullDataset = useMemo(() => generateDeterministicDataset(48291), []);
+  const [result, setResult] =
+    useState<SteganalysisResponse | null>(null);
 
-  // Filter States
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedMethod, setSelectedMethod] = useState<string>('All');
-  const [maxBpp, setMaxBpp] = useState<number>(1.0);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
-  // Filtered rows
-  const filteredRows = useMemo(() => {
-    return fullDataset.filter((row) => {
-      if (selectedCategory !== 'All' && row.category !== selectedCategory) return false;
-      if (selectedMethod !== 'All' && row.method !== selectedMethod) return false;
-      if (row.bpp > maxBpp) return false;
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        const matches =
-          row.id?.toLowerCase().includes(q) ||
-          row.method.toLowerCase().includes(q) ||
-          row.category.toLowerCase().includes(q) ||
-          row.resolution.toLowerCase().includes(q);
-        if (!matches) return false;
-      }
-      return true;
-    });
-  }, [fullDataset, selectedCategory, selectedMethod, maxBpp, searchQuery]);
+  const [error, setError] =
+    useState<string | null>(null);
 
-  // Real dynamic statistical calculations from filtered subset
-  const stats = useMemo(() => computeDatasetStatistics(filteredRows), [filteredRows]);
+  const loadResults = async () => {
+    setLoading(true);
+    setError(null);
 
-  // Chart 1 & 2: PSNR & SSIM vs bpp grouped by method
-  const pnsrSsimData = useMemo(() => {
-    const bppBuckets = [0.05, 0.15, 0.35, 0.75];
-    return bppBuckets.map((bpp) => {
-      const point: any = { bpp: `${bpp} bpp` };
-      METHODS.forEach((m) => {
-        const matching = filteredRows.filter(
-          (r) => r.method === m && Math.abs(r.bpp - bpp) < 0.1
-        );
-        if (matching.length > 0) {
-          point[`psnr_${m}`] = Number(
-            (matching.reduce((s, r) => s + r.psnr, 0) / matching.length).toFixed(1)
-          );
-          point[`ssim_${m}`] = Number(
-            (matching.reduce((s, r) => s + r.ssim, 0) / matching.length).toFixed(4)
-          );
-          point[`detect_${m}`] = Number(
-            ((matching.reduce((s, r) => s + r.detectionScore, 0) / matching.length) * 100).toFixed(1)
-          );
-        }
-      });
-      return point;
-    });
-  }, [filteredRows]);
+    const response =
+      await apiClient.get<SteganalysisResponse>(
+        '/steganalysis'
+      );
 
-  // Chart 4: Safe Capacity by Category
-  const capacityByCategoryData = useMemo(() => {
-    return CATEGORIES.map((cat) => {
-      const rowsInCat = fullDataset.filter((r) => r.category === cat);
-      const avgCap = rowsInCat.length > 0
-        ? rowsInCat.reduce((s, r) => s + r.safeCapacityBytes, 0) / rowsInCat.length
-        : 0;
-      return {
-        category: cat,
-        safeCapKB: Number((avgCap / 1024).toFixed(1)),
-      };
-    });
-  }, [fullDataset]);
+    if (response.error) {
+      setError(response.error.message);
+      setResult(null);
+    } else {
+      setResult(response.data ?? null);
+    }
 
-  // Chart 6: Radar Comparison across Methods
-  const radarData = useMemo(() => {
-    return [
-      { metric: 'PSNR Fidelity', 'LSB-Sequential': 85, 'Adaptive-Edge-LSB': 88, 'DCT-Frequency-Domain': 74, 'StegEx-ExactNet': 95, 'DenseAutoencoder-Approx': 65 },
-      { metric: 'SSIM Structure', 'LSB-Sequential': 88, 'Adaptive-Edge-LSB': 90, 'DCT-Frequency-Domain': 78, 'StegEx-ExactNet': 97, 'DenseAutoencoder-Approx': 72 },
-      { metric: 'Steganalysis Resistance', 'LSB-Sequential': 35, 'Adaptive-Edge-LSB': 78, 'DCT-Frequency-Domain': 65, 'StegEx-ExactNet': 92, 'DenseAutoencoder-Approx': 68 },
-      { metric: 'Capacity Scaling', 'LSB-Sequential': 70, 'Adaptive-Edge-LSB': 65, 'DCT-Frequency-Domain': 50, 'StegEx-ExactNet': 85, 'DenseAutoencoder-Approx': 92 },
-      { metric: 'Compute Speed', 'LSB-Sequential': 98, 'Adaptive-Edge-LSB': 82, 'DCT-Frequency-Domain': 65, 'StegEx-ExactNet': 55, 'DenseAutoencoder-Approx': 40 },
-    ];
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadResults();
   }, []);
+
+  const perImage = result?.perImage ?? [];
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="p-8 rounded-2xl bg-slate-900/80 border border-slate-800 text-center">
+          <RefreshCw className="w-6 h-6 text-brand-400 animate-spin mx-auto mb-3" />
+
+          <p className="text-sm text-slate-300">
+            Loading steganalysis validation results...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !result) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="p-6 rounded-2xl bg-red-950/30 border border-red-900/50">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+
+            <div>
+              <h2 className="text-sm font-semibold text-red-300">
+                Unable to load steganalysis results
+              </h2>
+
+              <p className="text-xs text-red-400/80 mt-1">
+                {error ??
+                  'No result data was returned by the backend.'}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={loadResults}
+            className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { validation, metrics } = result;
+
+  const limitations = getLimitations(
+    result.limitations
+  );
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-      {/* Persistent Demo / Synthetic Data Banner */}
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex items-center justify-between gap-3 shadow-lg">
-        <div className="flex items-center gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-amber-300">DEMO / SYNTHETIC RESEARCH DATASET</span>
-              <SimulatedBadge label="Deterministic Pseudo-Random Seed" />
-            </div>
-            <p className="text-xs text-amber-400/90 mt-0.5">
-              The benchmark figures and charts below represent a seeded deterministic simulation suite across 120+ benchmark conditions. They demonstrate analytical visualization workflows and do not reflect empirically measured neural network runs.
-            </p>
+
+      {/* Research status */}
+      <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-start gap-3">
+        <BarChart3 className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-sm text-emerald-300">
+              REAL VALIDATION RESULTS
+            </span>
+
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+              {validation.analysis_type}
+            </span>
           </div>
+
+          <p className="text-xs text-emerald-400/80 mt-1">
+            Results are loaded from the GuardianPixel backend
+            validation dataset rather than a synthetic research
+            dataset.
+          </p>
         </div>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-850 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <BarChart3 className="w-6 h-6 text-brand-400" />
-            <h1 className="text-2xl font-bold tracking-tight text-white">Steganographic Research Benchmark Lab</h1>
+
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Steganalysis Validation
+            </h1>
           </div>
+
           <p className="text-sm text-slate-400 max-w-3xl">
-            Interactive comparative analysis of spatial, transform-domain, and neural steganography methods across multi-class cover imagery.
+            Classical steganalysis measurements across the
+            GuardianPixel validation set.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800 self-start md:self-auto">
+        <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900 px-3 py-2 rounded-xl border border-slate-800">
           <Database className="w-4 h-4 text-brand-400" />
-          <span>Active Rows: <strong className="text-white">{filteredRows.length}</strong> / {fullDataset.length}</span>
+
+          <span>
+            Images:{' '}
+            <strong className="text-white">
+              {validation.image_count}
+            </strong>
+          </span>
         </div>
       </div>
 
-      {/* Interactive Filters Bar */}
-      <div className="p-5 rounded-2xl bg-slate-900/70 border border-slate-800 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          {/* Category filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-medium">Category:</span>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 focus:border-brand-500"
-            >
-              <option value="All">All Categories (6)</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
+      {/* Validation configuration */}
+      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
 
-          {/* Method filter */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-slate-400 font-medium">Method:</span>
-            <select
-              value={selectedMethod}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-              className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 focus:border-brand-500"
-            >
-              <option value="All">All Methods (5)</option>
-              {METHODS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            Dataset
+          </span>
 
-          {/* bpp Slider */}
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 font-medium">Max bpp:</span>
-            <input
-              type="range"
-              min="0.1"
-              max="1.0"
-              step="0.05"
-              value={maxBpp}
-              onChange={(e) => setMaxBpp(parseFloat(e.target.value))}
-              className="w-24 h-1.5 bg-slate-800 rounded accent-brand-500 cursor-pointer"
-            />
-            <span className="font-mono text-brand-300 font-semibold">{maxBpp.toFixed(2)}</span>
-          </div>
+          <p className="text-sm font-semibold text-white mt-2">
+            {validation.dataset}
+          </p>
         </div>
 
-        {/* Search & Reset */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 sm:w-60">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search experiments..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:border-brand-500"
-            />
-          </div>
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            Validation Images
+          </span>
 
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedCategory('All');
-              setSelectedMethod('All');
-              setMaxBpp(1.0);
-              setSearchQuery('');
-            }}
-            className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700 transition-colors"
-            title="Reset Filters"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-
-      {/* Dynamic Statistical Metrics Ribbon */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean PSNR (dB)</span>
-          <span className="text-xl font-bold font-mono text-emerald-400 my-1">{stats.meanPsnr} dB</span>
-          <span className="text-[10px] text-slate-500 font-mono">SD: ±{stats.sdPsnr} | 95% CI: [{stats.ci95Psnr[0]}, {stats.ci95Psnr[1]}]</span>
+          <p className="text-xl font-bold font-mono text-brand-300 mt-2">
+            {validation.image_count}
+          </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean SSIM</span>
-          <span className="text-xl font-bold font-mono text-brand-300 my-1">{stats.meanSsim}</span>
-          <span className="text-[10px] text-slate-500 font-mono">SD: ±{stats.sdSsim} | 95% CI: [{stats.ci95Ssim[0]}, {stats.ci95Ssim[1]}]</span>
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            Payload
+          </span>
+
+          <p className="text-xl font-bold font-mono text-teal-400 mt-2">
+            {formatBytes(validation.payload_bytes)}
+          </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean MSE</span>
-          <span className="text-xl font-bold font-mono text-slate-200 my-1">{stats.meanMse}</span>
-          <span className="text-[10px] text-slate-500 font-mono">SD: ±{stats.sdMse}</span>
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            Output
+          </span>
+
+          <p className="text-xl font-bold font-mono text-emerald-400 mt-2 uppercase">
+            {validation.embedding_output}
+          </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean Target bpp</span>
-          <span className="text-xl font-bold font-mono text-teal-400 my-1">{stats.meanBpp} bpp</span>
-          <span className="text-[10px] text-slate-500">Bits per carrier pixel</span>
+        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800">
+          <span className="text-[11px] font-semibold text-slate-400 uppercase">
+            Changed Pixels
+          </span>
+
+          <p className="text-xl font-bold font-mono text-amber-400 mt-2">
+            {formatPercent(
+              metrics.changed_pixel_ratio.mean
+            )}
+          </p>
+
+          <p className="text-[10px] text-slate-500 mt-1">
+            mean ratio
+          </p>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean Detection Risk</span>
-          <span className="text-xl font-bold font-mono text-amber-400 my-1">{(stats.meanDetection * 100).toFixed(1)}%</span>
-          <span className="text-[10px] text-slate-500">SRM Steganalysis prob.</span>
-        </div>
+      </section>
 
-        <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase">Mean Exec Time</span>
-          <span className="text-xl font-bold font-mono text-indigo-400 my-1">{stats.meanExecTime} ms</span>
-          <span className="text-[10px] text-slate-500">Per embedding cycle</span>
-        </div>
-      </div>
+      {/* Main metrics */}
+      <section>
 
-      {/* 6 Recharts Interactive Visualization Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Chart 1: PSNR vs bpp */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">1. PSNR Image Fidelity vs. Embedding Rate</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Higher is better. Values &gt; 40 dB indicate imperceptible distortion.</p>
-            </div>
-            <SimulatedBadge />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={pnsrSsimData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="bpp" stroke="#64748b" fontSize={11} />
-                <YAxis domain={[30, 60]} stroke="#64748b" fontSize={11} unit="dB" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Line type="monotone" dataKey="psnr_StegEx-ExactNet" name="StegEx-ExactNet" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="psnr_Adaptive-Edge-LSB" name="Adaptive-Edge-LSB" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="psnr_LSB-Sequential" name="LSB-Sequential" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="psnr_DCT-Frequency-Domain" name="DCT-Frequency" stroke="#818cf8" strokeWidth={1.5} strokeDasharray="4 4" />
-                <Line type="monotone" dataKey="psnr_DenseAutoencoder-Approx" name="DenseAutoencoder" stroke="#f43f5e" strokeWidth={1.5} strokeDasharray="2 2" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 2: SSIM vs bpp */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">2. Structural Similarity (SSIM) Degradation</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Measures perceptual preservation of luminance, contrast, and structure.</p>
-            </div>
-            <SimulatedBadge />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={pnsrSsimData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="bpp" stroke="#64748b" fontSize={11} />
-                <YAxis domain={[0.92, 1.0]} stroke="#64748b" fontSize={11} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Line type="monotone" dataKey="ssim_StegEx-ExactNet" name="StegEx-ExactNet" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="ssim_Adaptive-Edge-LSB" name="Adaptive-Edge-LSB" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="ssim_LSB-Sequential" name="LSB-Sequential" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="ssim_DCT-Frequency-Domain" name="DCT-Frequency" stroke="#818cf8" strokeWidth={1.5} />
-                <Line type="monotone" dataKey="ssim_DenseAutoencoder-Approx" name="DenseAutoencoder" stroke="#f43f5e" strokeWidth={1.5} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 3: Detection Score vs bpp */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">3. Steganalysis Detection Probability (SRM)</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Lower is better. Risk threshold: &gt; 50% indicates detectable signature.</p>
-            </div>
-            <SimulatedBadge />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={pnsrSsimData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="bpp" stroke="#64748b" fontSize={11} />
-                <YAxis domain={[0, 100]} stroke="#64748b" fontSize={11} unit="%" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
-                />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Line type="monotone" dataKey="detect_StegEx-ExactNet" name="StegEx-ExactNet" stroke="#38bdf8" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="detect_Adaptive-Edge-LSB" name="Adaptive-Edge-LSB" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="detect_LSB-Sequential" name="LSB-Sequential" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="detect_DCT-Frequency-Domain" name="DCT-Frequency" stroke="#818cf8" strokeWidth={1.5} />
-                <Line type="monotone" dataKey="detect_DenseAutoencoder-Approx" name="DenseAutoencoder" stroke="#f43f5e" strokeWidth={1.5} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 4: Safe Capacity by Category */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">4. Safe Embedding Capacity by Carrier Class</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Average recommended safe payload capacity per category (in KB).</p>
-            </div>
-            <RealMathBadge label="Model Math" />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={capacityByCategoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis dataKey="category" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={11} unit=" KB" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
-                />
-                <Bar dataKey="safeCapKB" name="Safe Capacity (KB)" fill="#0ea5e9" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 5: Execution Time vs Payload Size */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">5. Execution Latency vs. Payload Size</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Embedding pipeline runtime complexity scaling.</p>
-            </div>
-            <SimulatedBadge />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                <XAxis
-                  dataKey="payloadBytes"
-                  name="Payload"
-                  stroke="#64748b"
-                  fontSize={10}
-                  tickFormatter={(v) => `${Math.round(v / 1024)}KB`}
-                />
-                <YAxis dataKey="execTimeMs" name="Time" stroke="#64748b" fontSize={11} unit="ms" />
-                <Tooltip
-                  cursor={{ strokeDasharray: '3 3' }}
-                  contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }}
-                />
-                <Scatter name="Benchmarks" data={filteredRows.slice(0, 50)} fill="#a855f7" />
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Chart 6: Multi-Dimensional Radar Comparison */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-white">6. Comprehensive Method Architecture Radar</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Normalized score matrix across fidelity, security, capacity, and speed.</p>
-            </div>
-            <SimulatedBadge />
-          </div>
-
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="#334155" />
-                <PolarAngleAxis dataKey="metric" stroke="#94a3b8" fontSize={10} />
-                <PolarRadiusAxis stroke="#475569" angle={30} domain={[0, 100]} />
-                <Radar name="StegEx-ExactNet" dataKey="StegEx-ExactNet" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.4} />
-                <Radar name="Adaptive-Edge-LSB" dataKey="Adaptive-Edge-LSB" stroke="#10b981" fill="#10b981" fillOpacity={0.25} />
-                <Radar name="LSB-Sequential" dataKey="LSB-Sequential" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '8px', fontSize: '12px' }} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Detailed Statistical Experiment Records Table */}
-      <div className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800 flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-base font-semibold text-white">Filtered Benchmark Experiment Suite ({filteredRows.length} rows)</h3>
-            <p className="text-xs text-slate-400">All metrics computed from deterministic simulated trial instances.</p>
-          </div>
+            <h2 className="text-base font-semibold text-white">
+              Steganalysis Indicators
+            </h2>
 
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-mono">Confidence Level: 95% (Z=1.96)</span>
+            <p className="text-xs text-slate-500 mt-1">
+              Aggregate statistics across the{' '}
+              {validation.image_count}-image validation set.
+            </p>
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-96">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+
+          <MetricCard
+            label="Modified Pixels"
+            value={metrics.modified_pixel_count.mean.toLocaleString(
+              undefined,
+              {
+                maximumFractionDigits: 0,
+              }
+            )}
+            detail={`Median: ${metrics.modified_pixel_count.median.toLocaleString(
+              undefined,
+              {
+                maximumFractionDigits: 0,
+              }
+            )}`}
+          />
+
+          <MetricCard
+            label="Changed Pixel Ratio"
+            value={formatPercent(
+              metrics.changed_pixel_ratio.mean
+            )}
+            detail={`Range: ${formatPercent(
+              metrics.changed_pixel_ratio.min
+            )} – ${formatPercent(
+              metrics.changed_pixel_ratio.max
+            )}`}
+            accent="text-emerald-400"
+          />
+
+          <MetricCard
+            label="LSB χ² Change"
+            value={formatNumber(
+              metrics.lsb_chi_square_statistic_change.mean,
+              2
+            )}
+            detail={`Median: ${formatNumber(
+              metrics.lsb_chi_square_statistic_change.median,
+              2
+            )}`}
+            accent="text-brand-300"
+          />
+
+          <MetricCard
+            label="RS Imbalance Change"
+            value={metrics.rs_combined_imbalance_change.mean.toExponential(
+              2
+            )}
+            detail={`Median: ${metrics.rs_combined_imbalance_change.median.toExponential(
+              2
+            )}`}
+            accent="text-purple-300"
+          />
+
+          <MetricCard
+            label="Smooth Region Change"
+            value={formatPercent(
+              metrics.smooth_region_change_ratio.mean
+            )}
+            detail={`Median: ${formatPercent(
+              metrics.smooth_region_change_ratio.median
+            )}`}
+            accent="text-amber-400"
+          />
+
+          <MetricCard
+            label="Smooth Pixel Fraction"
+            value={formatPercent(
+              metrics.smooth_pixel_fraction.mean
+            )}
+            detail="Quantile-based region"
+            accent="text-teal-400"
+          />
+
+          <MetricCard
+            label="Histogram L1"
+            value={formatNumber(
+              metrics.histogram_l1.mean.mean,
+              7
+            )}
+            detail={`Median: ${formatNumber(
+              metrics.histogram_l1.mean.median,
+              7
+            )}`}
+            accent="text-indigo-300"
+          />
+
+          <MetricCard
+            label="LSB p-value Change"
+            value={metrics.lsb_chi_square_p_value_change.mean.toExponential(
+              2
+            )}
+            detail="Interpret with sample size"
+            accent="text-slate-300"
+          />
+
+        </div>
+      </section>
+
+      {/* Histogram channel metrics */}
+      <section className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+
+        <div className="mb-5">
+          <h2 className="text-base font-semibold text-white">
+            Histogram Distribution Change
+          </h2>
+
+          <p className="text-xs text-slate-400 mt-1">
+            Mean L1 distance between cover and stego channel
+            histograms.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+          <ChannelMetric
+            channel="Red"
+            value={metrics.histogram_l1.red.mean}
+          />
+
+          <ChannelMetric
+            channel="Green"
+            value={metrics.histogram_l1.green.mean}
+          />
+
+          <ChannelMetric
+            channel="Blue"
+            value={metrics.histogram_l1.blue.mean}
+          />
+
+          <ChannelMetric
+            channel="RGB Mean"
+            value={metrics.histogram_l1.mean.mean}
+          />
+
+        </div>
+      </section>
+
+      {/* Per image table */}
+      <section className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              Per-Image Validation Results
+            </h2>
+
+            <p className="text-xs text-slate-400 mt-1">
+              Individual measurements for each validation image.
+            </p>
+          </div>
+
+          <span className="text-xs font-mono text-slate-500">
+            {perImage.length} records
+          </span>
+
+        </div>
+
+        <div className="overflow-x-auto max-h-[500px]">
+
           <table className="w-full text-left text-xs">
+
             <thead className="sticky top-0 bg-slate-950 border-b border-slate-800 text-slate-400 font-mono">
+
               <tr>
-                <th className="p-2.5">ID</th>
-                <th className="p-2.5">Method</th>
-                <th className="p-2.5">Category</th>
-                <th className="p-2.5">Resolution</th>
-                <th className="p-2.5">Payload</th>
-                <th className="p-2.5">bpp</th>
-                <th className="p-2.5">PSNR (dB)</th>
-                <th className="p-2.5">SSIM</th>
-                <th className="p-2.5">MSE</th>
-                <th className="p-2.5">Detection Risk</th>
-                <th className="p-2.5">Exec Time</th>
+                <th className="p-2.5">Image</th>
+                <th className="p-2.5">Modified Pixels</th>
+                <th className="p-2.5">Changed Ratio</th>
+                <th className="p-2.5">LSB χ² Change</th>
+                <th className="p-2.5">RS Change</th>
+                <th className="p-2.5">Smooth Change</th>
               </tr>
+
             </thead>
+
             <tbody className="divide-y divide-slate-800/60 font-mono">
-              {filteredRows.slice(0, 100).map((row) => (
-                <tr key={row.id} className="hover:bg-slate-800/30">
-                  <td className="p-2.5 text-slate-400 font-semibold">{row.id}</td>
-                  <td className="p-2.5 text-brand-300 font-sans font-medium">{row.method}</td>
-                  <td className="p-2.5 text-slate-300 font-sans">{row.category}</td>
-                  <td className="p-2.5 text-slate-400">{row.resolution}</td>
-                  <td className="p-2.5 text-slate-300">{formatBytes(row.payloadBytes)}</td>
-                  <td className="p-2.5 text-emerald-400 font-semibold">{row.bpp}</td>
-                  <td className="p-2.5 text-slate-200">{row.psnr}</td>
-                  <td className="p-2.5 text-slate-200">{row.ssim}</td>
-                  <td className="p-2.5 text-slate-400">{row.mse}</td>
-                  <td className="p-2.5 text-amber-400">{(row.detectionScore * 100).toFixed(1)}%</td>
-                  <td className="p-2.5 text-slate-400">{row.execTimeMs} ms</td>
+
+              {perImage.map((row, index) => (
+
+                <tr
+                  key={
+                    row.image_id ??
+                    row.id ??
+                    index
+                  }
+                  className="hover:bg-slate-800/30"
+                >
+
+                  <td className="p-2.5 text-brand-300 font-semibold">
+                    {row.image_id ??
+                      row.id ??
+                      `Image ${index + 1}`}
+                  </td>
+
+                  <td className="p-2.5 text-slate-300">
+                    {Number.isFinite(
+                      Number(row.modified_pixel_count)
+                    )
+                      ? Number(
+                          row.modified_pixel_count
+                        ).toLocaleString()
+                      : '—'}
+                  </td>
+
+                  <td className="p-2.5 text-emerald-400">
+                    {Number.isFinite(
+                      Number(row.changed_pixel_ratio)
+                    )
+                      ? formatPercent(
+                          Number(
+                            row.changed_pixel_ratio
+                          )
+                        )
+                      : '—'}
+                  </td>
+
+                  <td className="p-2.5 text-slate-300">
+                    {Number.isFinite(
+                      Number(
+                        row.lsb_chi_square_statistic_change
+                      )
+                    )
+                      ? Number(
+                          row.lsb_chi_square_statistic_change
+                        ).toFixed(2)
+                      : '—'}
+                  </td>
+
+                  <td className="p-2.5 text-purple-300">
+                    {Number.isFinite(
+                      Number(
+                        row.rs_combined_imbalance_change
+                      )
+                    )
+                      ? Number(
+                          row.rs_combined_imbalance_change
+                        ).toExponential(2)
+                      : '—'}
+                  </td>
+
+                  <td className="p-2.5 text-amber-300">
+                    {Number.isFinite(
+                      Number(
+                        row.smooth_region_change_ratio
+                      )
+                    )
+                      ? formatPercent(
+                          Number(
+                            row.smooth_region_change_ratio
+                          )
+                        )
+                      : '—'}
+                  </td>
+
                 </tr>
+
               ))}
+
             </tbody>
+
           </table>
+
         </div>
+      </section>
+
+      {/* Interpretation */}
+      <section className="p-6 rounded-2xl bg-amber-500/5 border border-amber-500/20">
+
+        <div className="flex items-start gap-3">
+
+          <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+
+          <div>
+
+            <h2 className="text-sm font-semibold text-amber-300">
+              Interpretation & Limitations
+            </h2>
+
+            <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+              {validation.interpretation_note}
+            </p>
+
+            {limitations.map((limitation, index) => (
+              <p
+                key={index}
+                className="text-xs text-slate-500 mt-2 leading-relaxed"
+              >
+                • {limitation}
+              </p>
+            ))}
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* Validation summary */}
+      <section className="p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+
+        <h2 className="text-base font-semibold text-white mb-4">
+          Validation Summary
+        </h2>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+
+          <SummaryItem
+            label="Changed Ratio Min"
+            value={formatPercent(
+              metrics.changed_pixel_ratio.min
+            )}
+          />
+
+          <SummaryItem
+            label="Changed Ratio Median"
+            value={formatPercent(
+              metrics.changed_pixel_ratio.median
+            )}
+          />
+
+          <SummaryItem
+            label="Changed Ratio Max"
+            value={formatPercent(
+              metrics.changed_pixel_ratio.max
+            )}
+          />
+
+          <SummaryItem
+            label="Images Analysed"
+            value={String(validation.image_count)}
+          />
+
+        </div>
+
+      </section>
+
+      {/* Refresh */}
+      <div className="flex justify-end">
+
+        <button
+          onClick={loadResults}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs text-slate-300 border border-slate-800"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          Refresh Results
+        </button>
+
       </div>
+
     </div>
   );
 };
+
+interface MetricCardProps {
+  label: string;
+  value: string;
+  detail: string;
+  accent?: string;
+}
+
+const MetricCard: React.FC<MetricCardProps> = ({
+  label,
+  value,
+  detail,
+  accent = 'text-white',
+}) => (
+  <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col justify-between">
+
+    <span className="text-[11px] font-semibold text-slate-400 uppercase">
+      {label}
+    </span>
+
+    <span
+      className={`text-xl font-bold font-mono my-2 ${accent}`}
+    >
+      {value}
+    </span>
+
+    <span className="text-[10px] text-slate-500 font-mono">
+      {detail}
+    </span>
+
+  </div>
+);
+
+const ChannelMetric: React.FC<{
+  channel: string;
+  value: number;
+}> = ({ channel, value }) => (
+  <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800">
+
+    <span className="text-xs font-semibold text-slate-400">
+      {channel}
+    </span>
+
+    <p className="text-lg font-bold font-mono text-brand-300 mt-2">
+      {formatNumber(value, 7)}
+    </p>
+
+  </div>
+);
+
+const SummaryItem: React.FC<{
+  label: string;
+  value: string;
+}> = ({ label, value }) => (
+  <div>
+
+    <span className="text-slate-500">
+      {label}
+    </span>
+
+    <p className="text-slate-200 font-mono font-semibold mt-1">
+      {value}
+    </p>
+
+  </div>
+);

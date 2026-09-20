@@ -23,6 +23,9 @@ from backend.api.compare import (
 from backend.web_config import (
     WebConfig,
 )
+from backend.api.steganalysis import (
+    steganalysis_blueprint,
+)
 
 
 def create_app(
@@ -71,6 +74,9 @@ def create_app(
     app.register_blueprint(
         compare_blueprint
     )
+    app.register_blueprint(
+    steganalysis_blueprint
+    ) 
 
     @app.get("/")
     def index():

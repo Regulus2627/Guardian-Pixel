@@ -17,6 +17,10 @@ class WebConfig:
         "research_assets/baseline/"
         "baseline_comparison.json"
     )
+    STEGANALYSIS_RESULT_JSON = (
+        "data/div2k/"
+        "steganalysis_stego/steganalysis_summary.json"
+    )
     JSON_SORT_KEYS = False
 
     CORS_ORIGINS = [

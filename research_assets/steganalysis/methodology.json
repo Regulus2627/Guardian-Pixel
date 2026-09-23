@@ -1,0 +1,38 @@
+﻿{
+    "title":  "GuardianPixel Held-Out Equal-BPP Steganalysis Evaluation",
+    "isSimulated":  false,
+    "coverCount":  20,
+    "methodCount":  5,
+    "totalResultRows":  300,
+    "payloadLevelsBytes":  [
+                               500,
+                               2000,
+                               5000
+                           ],
+    "payloadLabels":  {
+                          "500":  "Low",
+                          "2000":  "Medium",
+                          "5000":  "High"
+                      },
+    "methods":  [
+                    "GuardianPixel",
+                    "Sequential Replacement",
+                    "Sequential Matching",
+                    "Keyed Random Matching",
+                    "Canny Synchronous"
+                ],
+    "reliableRankingMethods":  [
+                                   "GuardianPixel",
+                                   "Sequential Replacement",
+                                   "Sequential Matching",
+                                   "Keyed Random Matching"
+                               ],
+    "equalEmbeddedBits":  true,
+    "equalBppWithinEachCondition":  true,
+    "smoothRegionDefinition":  "Lowest local-variance 25 percent of each cover",
+    "varianceWindow":  11,
+    "rsChannel":  1,
+    "reliabilityRule":  "Embedding succeeds, extraction succeeds and BER equals zero",
+    "cannyTreatment":  "Reported separately when capacity or extraction synchronization fails",
+    "limitation":  "These classical steganalysis indicators do not prove universal undetectability or security."
+}

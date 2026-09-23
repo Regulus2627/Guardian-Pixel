@@ -1,3 +1,6 @@
+"""Configuration for the GuardianPixel Flask web application."""
+
+
 class WebConfig:
     """Default Flask application configuration."""
 
@@ -5,9 +8,10 @@ class WebConfig:
     MAX_DECODED_FILE_BYTES = 20 * 1024 * 1024
 
     CATEGORY_THRESHOLDS_PATH = (
-    "research_assets/compatibility/"
-    "category_thresholds.json"
-)
+        "research_assets/compatibility/"
+        "category_thresholds.json"
+    )
+
     BASELINE_BATCH_DIRECTORY = (
         "research_assets/"
         "baseline_batch_20covers"
@@ -17,10 +21,15 @@ class WebConfig:
         "research_assets/baseline/"
         "baseline_comparison.json"
     )
+
+    STEGANALYSIS_DIRECTORY = (
+        "research_assets/"
+        "steganalysis"
+    )
+
     JSON_SORT_KEYS = False
 
     CORS_ORIGINS = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
-    

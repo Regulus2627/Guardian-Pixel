@@ -5,24 +5,13 @@ from __future__ import annotations
 from flask import Flask, jsonify
 from flask_cors import CORS
 
-from backend.api.compatibility import (
-    compatibility_blueprint,
-)
-from backend.api.embed import (
-    embed_blueprint,
-)
-from backend.api.extract import (
-    extract_blueprint,
-)
-from backend.api.health import (
-    health_blueprint,
-)
-from backend.api.compare import (
-    compare_blueprint,
-)
-from backend.web_config import (
-    WebConfig,
-)
+from backend.api.compare import compare_blueprint
+from backend.api.compatibility import compatibility_blueprint
+from backend.api.embed import embed_blueprint
+from backend.api.extract import extract_blueprint
+from backend.api.health import health_blueprint
+from backend.api.research import research_blueprint
+from backend.web_config import WebConfig
 
 
 def create_app(
@@ -31,46 +20,26 @@ def create_app(
     """Create and configure the GuardianPixel Flask application."""
 
     app = Flask(__name__)
-
-    app.config.from_object(
-        WebConfig
-    )
+    app.config.from_object(WebConfig)
 
     if test_config is not None:
-        app.config.update(
-            test_config
-        )
+        app.config.update(test_config)
 
     CORS(
         app,
         resources={
             r"/api/*": {
-                "origins": app.config[
-                    "CORS_ORIGINS"
-                ]
+                "origins": app.config["CORS_ORIGINS"]
             }
         },
     )
 
-    # Register every API blueprint.
-    app.register_blueprint(
-        health_blueprint
-    )
-
-    app.register_blueprint(
-        compatibility_blueprint
-    )
-
-    app.register_blueprint(
-        embed_blueprint
-    )
-
-    app.register_blueprint(
-        extract_blueprint
-    )
-    app.register_blueprint(
-        compare_blueprint
-    )
+    app.register_blueprint(health_blueprint)
+    app.register_blueprint(compatibility_blueprint)
+    app.register_blueprint(embed_blueprint)
+    app.register_blueprint(extract_blueprint)
+    app.register_blueprint(compare_blueprint)
+    app.register_blueprint(research_blueprint)
 
     @app.get("/")
     def index():
